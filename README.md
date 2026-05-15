@@ -4,9 +4,9 @@ Claude Code / Cowork plugin for **external developers** building on the
 Laioutr platform — Vue 3 / Nuxt 3 storefronts, UI components, and Orchestr
 data integrations.
 
-The plugin ships the same skills, agents, and rules the Laioutr core team
-uses internally, with monorepo-internal pieces stripped out. See
-`MAPPING.md` for what was kept and what was excluded.
+The plugin ships the same skills and rules the Laioutr core team uses
+internally, with monorepo-internal pieces stripped out. See `MAPPING.md`
+for what was kept and what was excluded.
 
 ## Install
 
@@ -35,18 +35,6 @@ Skills load automatically when Claude detects a matching task.
 | `component-architecture` | Producing component API specs from a Figma analysis |
 | `figma-design-analysis` | Decomposing complex Figma layouts into component hierarchies |
 | `figma-to-component` | Implementing Vue components from Figma designs |
-
-### Agents (5)
-
-Specialist subagents you can delegate to.
-
-| Agent | Specialty |
-| --- | --- |
-| `api-documenter` | OpenAPI / API documentation and developer portals |
-| `architect-reviewer` | System design validation, scalability, evolutionary architecture |
-| `typescript-pro` | Advanced type system, type-safe full-stack patterns |
-| `vue-expert` | Vue 3 + Composition API, reactivity, enterprise patterns |
-| `vue-nuxt-expert` | Nuxt 3 SSR/SSG full-stack Vue applications |
 
 ### Rules (37)
 
@@ -93,7 +81,6 @@ claude-plugin-developer/
 ├── CLAUDE.md                 # Platform-level guidance for Claude
 ├── MAPPING.md                # What was carried over from the monorepo, and why
 ├── README.md
-├── agents/                   # 5 specialist subagents
 ├── rules/                    # 13 cross-cutting rules + 3 layer subfolders
 │   ├── ui-kit/               # 13 rules + CLAUDE.md (atomic primitives)
 │   ├── ui/                   # 5 rules + CLAUDE.md (commerce organisms)

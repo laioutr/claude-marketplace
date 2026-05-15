@@ -1,7 +1,11 @@
 # Source Mapping
 
-Tracks what was carried over from `laioutr/.claude/` into this plugin,
-what was rewritten, and what was intentionally excluded.
+Tracks what was carried over from `laioutr/.claude/` and the package-local
+`packages/*/.claude/` folders into this plugin, what was rewritten, and
+what was intentionally excluded.
+
+Final composition: 4 skills, 0 agents, 37 rules (13 top-level + 24
+layer-specific across `ui-kit`, `ui`, `ui-app`), 1 MCP server config.
 
 ## Skills
 
@@ -20,17 +24,26 @@ what was rewritten, and what was intentionally excluded.
 
 ## Agents
 
-| Source path | Plugin path | Action | Notes |
-| --- | --- | --- | --- |
-| `agents/api-documenter.md` | `agents/api-documenter.md` | copied | |
-| `agents/architect-reviewer.md` | `agents/architect-reviewer.md` | copied | |
-| `agents/typescript-pro.md` | `agents/typescript-pro.md` | copied | |
-| `agents/vue-expert.md` | `agents/vue-expert.md` | copied | |
-| `agents/vue-nuxt-expert.md` | `agents/vue-nuxt-expert.md` | copied | |
-| `agents/cli-developer.md` | — | **excluded** | Not needed for the external Frontend/Orchestr workflow |
-| `agents/dx-optimizer.md` | — | **excluded** | Not needed for the external Frontend/Orchestr workflow |
-| `agents/nextjs-developer.md` | — | **excluded** | Cockpit-internal stack |
-| `agents/react-specialist.md` | — | **excluded** | Cockpit-internal stack |
+No agents are bundled in this plugin. The directory and all previously
+copied agents (`api-documenter`, `architect-reviewer`, `typescript-pro`,
+`vue-expert`, `vue-nuxt-expert`) were dropped — the plugin focuses on
+skills, rules, and the docs MCP server. External developers can still
+delegate to general-purpose subagents in their own Claude setup.
+
+For reference, these `.claude/agents/*.md` files exist in the source
+repo but are **not** carried over:
+
+| Source path | Action | Notes |
+| --- | --- | --- |
+| `agents/api-documenter.md` | **excluded** | Not bundled |
+| `agents/architect-reviewer.md` | **excluded** | Not bundled |
+| `agents/typescript-pro.md` | **excluded** | Not bundled |
+| `agents/vue-expert.md` | **excluded** | Not bundled |
+| `agents/vue-nuxt-expert.md` | **excluded** | Not bundled |
+| `agents/cli-developer.md` | **excluded** | Not needed for the external Frontend/Orchestr workflow |
+| `agents/dx-optimizer.md` | **excluded** | Not needed for the external Frontend/Orchestr workflow |
+| `agents/nextjs-developer.md` | **excluded** | Cockpit-internal stack |
+| `agents/react-specialist.md` | **excluded** | Cockpit-internal stack |
 
 ## Rules
 
