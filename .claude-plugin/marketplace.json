@@ -1,20 +1,20 @@
 {
-  "name": "laioutr-developer",
+  "name": "laioutr",
   "owner": {
     "name": "Laioutr GmbH",
     "url": "https://laioutr.com"
   },
   "metadata": {
-    "description": "Laioutr developer plugin — skills, rules, and the docs MCP for external developers building on the Laioutr platform (Vue 3 / Nuxt 3, UI components, Orchestr data integrations).",
+    "description": "Public Claude Code marketplace for the Laioutr platform. Plugins target external developers, designers, and content authors building on Laioutr (Vue 3 / Nuxt 3, UI components, Orchestr data integrations).",
     "version": "0.1.0"
   },
   "plugins": [
     {
       "name": "laioutr-developer",
-      "source": "./",
+      "source": "./plugins/laioutr-developer",
       "description": "Developer-Workflows für Laioutr Frontend/Full-Stack Engineers.",
       "version": "0.1.0",
-      "homepage": "https://github.com/laioutr/claude-plugin-developer",
+      "homepage": "https://github.com/laioutr/claude-marketplace",
       "license": "UNLICENSED",
       "keywords": ["laioutr", "developer", "typescript", "vue", "nuxt"]
     }
