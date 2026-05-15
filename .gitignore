@@ -1,0 +1,5 @@
+.DS_Store
+*.plugin
+node_modules/
+.env
+.env.local

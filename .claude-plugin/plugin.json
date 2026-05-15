@@ -1,0 +1,18 @@
+{
+  "name": "laioutr-developer",
+  "version": "0.1.0",
+  "description": "Developer-Workflows für Laioutr Frontend/Full-Stack Engineers.",
+  "author": {
+    "name": "Laioutr GmbH"
+  },
+  "license": "UNLICENSED",
+  "keywords": [
+    "laioutr",
+    "developer",
+    "typescript",
+    "vue",
+    "nuxt",
+    "code-review",
+    "debugging"
+  ]
+}
