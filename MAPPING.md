@@ -130,6 +130,7 @@ review — they should be updated before the plugin is shipped publicly.
 | `.claude/settings.local.json` | — | excluded (machine-local) |
 | `.claude/review/` | — | excluded (audit/review work-in-progress notes) |
 | — | `.mcp.json` | **new** — registers an HTTP MCP server pointing at `https://docs.laioutr.com/mcp` so the plugin can search the Laioutr developer docs at runtime |
+| — | `.claude-plugin/marketplace.json` | **new** — makes this repo a single-plugin Claude Code marketplace so it can be installed via `claude /plugin marketplace add laioutr/claude-plugin-developer` |
 
 ## Re-syncing from the monorepo
 

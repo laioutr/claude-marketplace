@@ -10,10 +10,21 @@ for what was kept and what was excluded.
 
 ## Install
 
-Locally during development:
+This repo doubles as a single-plugin **Claude Code marketplace** — the
+`.claude-plugin/marketplace.json` makes it directly installable.
 
 ```bash
-claude plugin install /path/to/claude-plugin-developer
+# Add the marketplace
+claude /plugin marketplace add laioutr/claude-plugin-developer
+
+# Install the plugin from it
+claude /plugin install laioutr-developer@laioutr-developer
+```
+
+Or install from a local path during development:
+
+```bash
+claude /plugin install /path/to/claude-plugin-developer
 ```
 
 Or as a packaged `.plugin` file:
@@ -77,7 +88,8 @@ config with `type: "http"` and `url`.
 ```
 claude-plugin-developer/
 ├── .claude-plugin/
-│   └── plugin.json
+│   ├── marketplace.json      # Marketplace manifest (this repo is its own marketplace)
+│   └── plugin.json           # Plugin manifest
 ├── CLAUDE.md                 # Platform-level guidance for Claude
 ├── MAPPING.md                # What was carried over from the monorepo, and why
 ├── README.md
