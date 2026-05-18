@@ -14,6 +14,7 @@ layer-specific across `ui-kit`, `ui`, `ui-app`), 1 MCP server config.
 | `skills/adr/` | `skills/adr/` | copied | Generic ADR writing |
 | `skills/component-architecture/` | `skills/component-architecture/` | copied | Still contains `packages/ui-kit/...` paths in grep examples (see Open work below) |
 | `skills/figma-design-analysis/` | `skills/figma-design-analysis/` | copied | `COCKPIT-99` / `LUI-123` Jira keys generalized to `PROJECT-123` / `TEAM-456`. Still contains heavy `packages/ui-kit/`, `packages/ui/`, `packages/ui-app/` path usage |
+| `skills/figma-export-assets/` | `skills/figma-export-assets/` | copied | Verbatim from `~/.claude/skills/figma-export-assets/`. Contains `packages/ui-kit/`, `packages/ui/`, `packages/ui-app/` path usage (Step 4 table, Step 5 examples) and a hardcoded `/Users/sl/src/laioutr/...` export-spec example (Step 7) — same deferred rewrite as the other figma skills (see Open work). Cross-references `figma-design-analysis` and `figma-to-component`, both present in the plugin |
 | `skills/figma-to-component/` | `skills/figma-to-component/` | copied | Line 172 reka-ui internal cross-ref replaced with an inline summary of the data-attribute pattern and a link to reka-ui's public docs |
 | `skills/changeset/` | — | **excluded** | Removed in trimming pass (monorepo-internal release workflow) |
 | `skills/discoveryjs/` | — | **excluded** | Removed in trimming pass |
@@ -129,7 +130,7 @@ review — they should be updated before the plugin is shipped publicly.
 | `.claude/settings.json` | — | excluded (project-local Claude config) |
 | `.claude/settings.local.json` | — | excluded (machine-local) |
 | `.claude/review/` | — | excluded (audit/review work-in-progress notes) |
-| — | `.mcp.json` | **new** — registers an HTTP MCP server pointing at `https://docs.laioutr.com/mcp` so the plugin can search the Laioutr developer docs at runtime |
+| — | `.mcp.json` | **new** — registers an HTTP MCP server pointing at `https://docs.laioutr.io/mcp` so the plugin can search the Laioutr developer docs at runtime |
 | — | `.claude-plugin/marketplace.json` | **new** — makes this repo a single-plugin Claude Code marketplace so it can be installed via `claude /plugin marketplace add laioutr/claude-plugin-developer` |
 
 ## Re-syncing from the monorepo
@@ -288,3 +289,227 @@ Rewriting these requires the same rephrasing pattern applied to the
 rules — "your module's `src/runtime/...`" or import-from-package
 references. Pending a decision on whether to invest the same level of
 effort in skill rewrites.
+
+## Cleanup pass (post-initial-publish)
+
+After publishing the initial mirror, the rules tree was audited a second
+time against the actual external-developer mental model: **one Nuxt
+module, multiple component roles** (atom-style, organism, section/block)
+— not three separate packages. The internal monorepo's three-package
+split lives only in `@laioutr-core/*`, which the external dev consumes.
+
+Structural changes:
+
+- **Subfolders flattened.** `rules/ui-kit/`, `rules/ui/`, `rules/ui-app/`
+  collapsed into a flat `rules/` directory. Role is encoded by filename
+  prefix (`ui-kit-*`, `ui-*`, `ui-app-*`); cross-cutting rules have no
+  prefix. The folder structure was reinforcing the wrong "you have three
+  packages" mental model.
+- **`three-layer-architecture.md` added** to replace the three deleted
+  `package-role.md` files. Frames the layers as upstream packages the
+  dev consumes, and documents the resolution ladder when upstream is
+  missing something: (1) prop / minor CSS override, (2) local custom
+  component in the dev's module, (3) fork from
+  <https://github.com/laioutr/ui-source>, (4) upstream issue. The
+  forking option is explicit — not the default, but valid.
+- **Three discovery surfaces documented:** docs MCP (`laioutr-docs` →
+  `https://docs.laioutr.io/mcp`) for props/emits/slots/usage,
+  Storybook (<https://storybook.laioutr.cloud/>) for visual states,
+  and `laioutr/ui-source` for implementation/forking.
+
+Files dropped (10):
+
+| File | Reason |
+| --- | --- |
+| `rules/ui-kit/CLAUDE.md`, `rules/ui/CLAUDE.md`, `rules/ui-app/CLAUDE.md` | Folder-level summaries; superseded by the flat Rule Index in top-level `CLAUDE.md` |
+| `rules/ui-kit/package-role.md`, `rules/ui/package-role.md`, `rules/ui-app/package-role.md` | Merged into `rules/three-layer-architecture.md` |
+| `rules/ui-kit/storybook-atoms-categorization.md`, `rules/ui/storybook-categorization.md` | Prescribe Laioutr-internal Storybook taxonomy that external devs pick on their own |
+| `rules/ui-kit/no-viewport-stories.md`, `rules/ui/no-viewport-stories.md` | Absorbed as a section into top-level `rules/storybook-stories.md` |
+
+Files renamed (18) — all moved to top-level `rules/` with role prefix:
+
+| Old path | New path |
+| --- | --- |
+| `rules/ui-kit/component-structure.md` | `rules/vue-component-file-structure.md` (reframed as general Vue SFC structure) |
+| `rules/ui-kit/reka-ui-wrapper-patterns.md` | `rules/reka-ui-wrapper-patterns.md` (applies anywhere you wrap reka-ui) |
+| `rules/ui-kit/no-reka-ui-type-leakage.md` | `rules/reka-ui-no-type-leakage.md` (same) |
+| `rules/ui-kit/css-first-responsive.md` | `rules/ui-kit-css-first-responsive.md` |
+| `rules/ui-kit/no-outer-chrome-in-primitives.md` | `rules/ui-kit-no-outer-chrome-in-primitives.md` |
+| `rules/ui-kit/reka-ui.md` | `rules/ui-kit-reka-ui.md` |
+| `rules/ui-kit/styling.md` | `rules/ui-kit-styling.md` |
+| `rules/ui-kit/theming.md` | `rules/ui-kit-theming.md` |
+| `rules/ui-kit/todo-figma-marker.md` | `rules/ui-kit-todo-figma-marker.md` |
+| `rules/ui-kit/vue-template-type-casts.md` | `rules/ui-kit-vue-template-type-casts.md` |
+| `rules/ui/ui-kit-first.md` | `rules/ui-ui-kit-first.md` |
+| `rules/ui/z-ordering.md` | `rules/ui-z-ordering.md` |
+| `rules/ui-app/block-naming.md` | `rules/ui-app-block-naming.md` |
+| `rules/ui-app/forbidden-field-names.md` | `rules/ui-app-forbidden-field-names.md` |
+| `rules/ui-app/schema-field-if.md` | `rules/ui-app-schema-field-if.md` |
+| `rules/ui-app/section-config-standard.md` | `rules/ui-app-section-config-standard.md` |
+| `rules/ui-app/shared-field-factories.md` | `rules/ui-app-shared-field-factories.md` |
+| `rules/ui-app/shared-field-options.md` | `rules/ui-app-shared-field-options.md` |
+
+Content edits (residual leaks + reframing):
+
+- **Reframed for consumer + author** (no longer assume the reader edits
+  upstream packages): `vue-component-file-structure.md`,
+  `ui-kit-no-outer-chrome-in-primitives.md`, `reka-ui-wrapper-patterns.md`,
+  `reka-ui-no-type-leakage.md`.
+- **Resolution-ladder rewrite** with forking option:
+  `ui-ui-kit-first.md`, `ui-app-block-naming.md` (line 39).
+- **Phase / target-state framing stripped**: `surface-tone.md` (status
+  callout, Phase 2/3/4 section headers, upstream-component example
+  list, narrowing-verdict block, portal-handling target-state),
+  `public-css-api.md` (status column in override-surfaces table,
+  forward-looking migration section, ADR link, broken
+  `lint-after-ui-changes.md` cross-ref), `ui-app-section-config-standard.md`
+  (Figma file ID `QgRgNtTxBTCAxpTe1rriHM`, broken `CLAUDE.md`
+  cross-ref, "Renames enforced by this standard" migration table,
+  Phase 2 preset migration, "Gaps and follow-ups" section).
+- **Residual monorepo leaks fixed**: `no-wrapper-css-overrides.md`
+  (broken ADR 0013 link at lines 5 + 98, three-layer phrasing at line
+  68), `vue-script-imports-single-block.md` (husky reference at line
+  30 → generic "your linter"), `unique-component-names.md` (line 3
+  "across all three layers" → "within your module"),
+  `story-icons-must-exist.md` (rg dist path → docs MCP / Storybook),
+  `translations-tl-vs-useLocale.md` (line 50 relative
+  `../../composables/useLocale` → `#ui-kit/composables/useLocale`),
+  `ui-app-schema-field-if.md` (Cockpit-internal
+  `apps/cockpit/src/features/project/studio/...` paths → generic
+  "Studio's schema-conditions evaluator").
+- **Stale references**: top-level `CLAUDE.md`'s dead pointer to the
+  excluded `rules/commit-scope-ui.md` removed; pointer to the excluded
+  `writing-section-block-migration-manifest` skill removed; Context7-vs-laioutr-docs preference clarified
+  (Laioutr docs MCP first, Context7 fallback).
+- **`.mcp.json` URL fix**: `https://docs.laioutr.com/mcp` →
+  `https://docs.laioutr.io/mcp` (the canonical URL per
+  <https://docs.laioutr.io/getting-started/mcp-server>).
+
+Net rule count: 31 rules + 1 architecture page = 32 files in
+`skills/laioutr-platform/rules/` (down from 38 + 3 layer `CLAUDE.md`
+files).
+
+Note: `#ui-kit/...`, `#ui/...`, and `#frontend-core` Nuxt aliases are
+public API surface of the upstream packages, not monorepo-internal
+paths — they may appear in rules and examples freely.
+
+## Architecture migration (skill-first)
+
+Earlier ship assumed a plugin-root `CLAUDE.md` would be auto-loaded into
+Claude's context. This is **not** how Claude Code plugins work — the
+official plugins reference is explicit (*"A `CLAUDE.md` file at the
+plugin root is not loaded as project context. Plugins contribute context
+through skills, agents, and hooks rather than `CLAUDE.md`. To ship
+instructions that load into Claude's context, put them in a skill."*),
+and `claude plugin validate` emits the same warning verbatim. With the
+old layout, the platform overview, discovery surfaces, Orchestr handler
+table, commit conventions, and the rule index never reached the model.
+
+Migration applied:
+
+- **New skill: `skills/laioutr-platform/SKILL.md`** carries everything
+  the dead `CLAUDE.md` used to carry. Frontmatter description matches on
+  any Laioutr task — mentions of "Laioutr", `@laioutr-core/*`,
+  `@laioutr-app/*`, `@laioutr-org/*`, `defineSection`, `defineBlock`,
+  `ui-kit`, `ui-app`, Orchestr, storefront, etc. — so it auto-loads
+  whenever the plugin's audience is at the keyboard.
+- **`rules/` moved under the skill** (`git mv rules
+  skills/laioutr-platform/rules`). Relative paths in the rule index
+  (`./rules/<file>.md`) and in cross-rule references (`./<file>.md`)
+  remain valid.
+- **Plugin-root `CLAUDE.md` deleted.** README.md is now the only
+  developer-facing doc at the plugin root.
+- **`plugin.json` cleanup**: dropped the `version` field (the
+  `marketplace.json` entry owns version per the docs anti-pattern
+  guidance), translated the German `description` to English.
+- **README rewrites**: removed the "auto-loaded `CLAUDE.md`" claim,
+  documented the new two-step on-demand loading flow, fixed rule and
+  skill counts, refreshed the Layout tree.
+
+Re-sync impact: anything previously written to the plugin-root
+`CLAUDE.md` (Working Style, Platform Overview, Orchestr table, Rule
+Index updates) now belongs in `skills/laioutr-platform/SKILL.md`. Do not
+re-introduce a plugin-root `CLAUDE.md` — the validator will warn and
+the content will be invisible to Claude.
+
+Open items deliberately deferred:
+
+- **Oversize `SKILL.md` bodies**: `skills/figma-design-analysis/SKILL.md`
+  (~824 lines) and `skills/component-architecture/SKILL.md` (~640
+  lines) are over the 500-line working ceiling cited by Anthropic's
+  skill-authoring guidance. Body should be split into sibling
+  `reference/*.md` files at one level of depth. Not yet done.
+- **Further skill promotions**: research surfaced `using-reka-ui` (3
+  refs: `ui-kit-reka-ui`, `reka-ui-wrapper-patterns`,
+  `reka-ui-no-type-leakage`) and `using-surface-tone` (single dense
+  rule) as next promotion candidates. Deferred for now to keep the
+  skill-listing budget headroom.
+
+## Rules-as-references rename + first promotions
+
+After research on how other Claude Code plugins expose rule libraries
+(Anthropic's `plugin-dev/*` skills, `frontend-design`,
+`security-guidance`, hashicorp/agent-skills, obra/superpowers), we
+aligned with the Anthropic convention and promoted two high-volume
+task surfaces to their own skills.
+
+- **`rules/` renamed to `references/`** to match the Anthropic
+  convention (used by every first-party skill that ships sibling
+  reference material). The `skill-reviewer` agent in `plugin-dev`
+  explicitly checks for this folder name. Same content, same on-demand
+  loading model.
+
+- **New skill: `writing-storybook-stories`.** The full content of
+  `storybook-stories.md` now lives in the skill body
+  (`skills/writing-storybook-stories/SKILL.md`). Reference file deleted
+  from `laioutr-platform/references/`. Trigger: any `.stories.ts`
+  authoring or refactor task.
+
+- **New skill: `writing-section-block-definitions`.** Bundles 6 ui-app
+  references (the highest-volume external-developer task surface):
+  `section-config-standard.md`, `forbidden-field-names.md`,
+  `schema-field-if.md`, `block-naming.md`, `shared-field-factories.md`,
+  `shared-field-options.md`. All six were `git mv`'d from
+  `laioutr-platform/references/` to
+  `writing-section-block-definitions/references/` with the `ui-app-`
+  prefix dropped (the skill folder makes the role explicit). Internal
+  cross-references between the six updated; one external cross-ref
+  (`block-naming.md` → `three-layer-architecture.md`) rewritten to
+  `../../laioutr-platform/references/three-layer-architecture.md`. The
+  platform skill's "Sections & Blocks" rule-index section replaced with
+  a pointer to the new skill.
+
+Decision rationale (per [research §2 / §3](/tmp/claude-plugin-best-practices.md
+and the survey of `plugin-dev`, `frontend-design`, `superpowers`,
+`hashicorp/agent-skills`)): we ruled out promoting every rule into its
+own skill — at 31 rules × ~150 description tokens ≈ 4.7 K, the
+skill-listing budget (~1 % of context, ~2 K tokens) would overflow and
+descriptions would silently truncate. We also flagged the [active
+`paths:`-glob discoverability bug](https://github.com/anthropics/claude-code/issues/49835)
+as a reason to avoid per-rule promotion in the near term. The chosen
+pattern — one always-on platform skill plus task-triggered sibling
+skills for the highest-volume authoring surfaces — keeps the budget
+headroom while still surfacing the two most frequently-needed
+rulesets through their own descriptions.
+
+Final shape:
+
+- 1 always-on platform skill (`laioutr-platform`) with 25 cross-cutting
+  references + 1 architecture page in `references/`.
+- 2 task-triggered convention skills (`writing-storybook-stories`,
+  `writing-section-block-definitions`) — the second carries its own
+  `references/` with 6 deep-detail files.
+- 5 workflow skills carried over from the monorepo (`adr`,
+  `component-architecture`, `figma-design-analysis`,
+  `figma-to-component`, `writing-claude-rules`).
+
+Net `references/` count: **25 + 6 = 31 deep-detail files + 1
+architecture page**. The reduction from "32 rule files under one
+skill" to a split layout is the deliberate result of the
+storybook-content-into-skill-body absorption.
+
+Re-sync impact: when re-syncing from the monorepo, the
+section/block-definition rules go under
+`writing-section-block-definitions/references/` (no `ui-app-` prefix);
+the storybook conventions get folded into `writing-storybook-stories/SKILL.md`
+directly (no separate reference file).

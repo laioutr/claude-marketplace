@@ -12,8 +12,7 @@
     {
       "name": "laioutr-developer",
       "source": "./plugins/laioutr-developer",
-      "description": "Developer-Workflows für Laioutr Frontend/Full-Stack Engineers.",
-      "version": "0.1.0",
+      "description": "Workflows, rules, and the docs MCP for developers building on the Laioutr e-commerce platform.",
       "homepage": "https://github.com/laioutr/claude-marketplace",
       "license": "UNLICENSED",
       "keywords": ["laioutr", "developer", "typescript", "vue", "nuxt"]

@@ -138,8 +138,6 @@ Components in `ui-kit` and `ui` **must never** depend on `frontend-core`, `orche
 
 This rule extends beyond direct imports. Accessing state that originates from these packages through Nuxt/Vue globals (`useNuxtApp()`, `useRoute()`, `useRouter()`, `useRuntimeConfig()`) is equally forbidden — these are indirect dependencies on the data/routing layer. If a component needs route-aware behavior (e.g., active link highlighting), accept it as a prop (`active`, `isActive`) and let the ui-app wrapper determine the value.
 
-**Allowed ui-kit injections:** `useLocale()` and `useTheme()` are ui-kit-internal composables backed by Vue's `inject()` with Symbol keys — they are part of the component library, not external dependencies. Use `useLocale()` for locale/i18n and `useTheme()` for theme resources (images, icons, breakpoints, background-aware styling). Both are widely used across ui-kit and ui components.
-
 **Theme-provided vs prop-provided resources:** Some visual assets (background images, decorative icons, placeholders, empty state illustrations) come from the theme system via `useTheme().image()` rather than from props. The test: does every instance of this component show the same asset (per theme), or does each usage show different data? If the asset varies by theme but not by usage, it belongs in the theme system and is an implementation detail — do not spec a prop for it. If the asset varies per usage (e.g., each product has its own image), it's a `Media` prop. When the analysis is ambiguous (e.g., "accept a Media prop or icon name"), check whether an existing component with similar theme-dependent visuals uses props or `useTheme()`, and flag the ambiguity in Phase 2 if unresolved.
 
 If Phase 1 codebase gathering reveals existing components that violate this rule, do not treat them as precedent — flag them as known violations and follow the rule for new specs.
@@ -628,7 +626,7 @@ Date: [date]
 | Multi-state prop without transition documentation | If a component has 3+ state values, document which transitions are valid and which events trigger them. |
 | Treating validation errors as internal state | Validation errors are parent-controlled (the parent decides when to validate). Spec as `error?: string` prop. |
 | Speccing static text as a prop | Static user-facing text ("Thank you!", "Order summary") is an i18n key inside the component, not a prop. Only spec props for dynamic data (order numbers, names, counts). |
-| Treating `useTheme()` as a forbidden dependency | `useTheme()` is a ui-kit-internal composable, same as `useLocale()`. It is NOT an external dependency. Components use it for theme images, icons, and breakpoints. |
+| Treating `useTheme()` as a forbidden dependency | `useTheme()` is a ui-kit-internal composable. It is NOT an external dependency. Components use it for theme images, icons, and breakpoints. |
 | Speccing a prop for theme-provided resources | Decorative backgrounds, placeholders, and empty state images that come from the theme system (`useTheme().image()`) are implementation details, not props. Only spec `Media` props for instance-varying data. |
 | Skipping Phase 1 for planned-but-unimplemented components | When components are "planned in another analysis," read that analysis document. Verify names match, check if an architecture spec exists, and note behavioral constraints. |
 | Re-speccing a component already specced in another architecture document | Shared cross-plan components should be specced once. Reference the existing spec instead of creating a duplicate. |

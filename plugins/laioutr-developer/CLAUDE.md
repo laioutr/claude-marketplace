@@ -1,124 +1,67 @@
-# Laioutr Developer — Claude Guidance
+# laioutr-developer — Plugin Maintenance Guide
 
-This file gives Claude context for working alongside developers building on
-the Laioutr platform — Vue 3 / Nuxt 3 frontends, UI components, and Orchestr
-data integrations.
+For plugin **maintainers** working inside `plugins/laioutr-developer/`. End users install the plugin and read [`README.md`](./README.md); this file is for the person editing the skills, references, and MCP config.
 
-> **Audience:** External developers building Laioutr Apps, custom UI
-> components, or Orchestr handlers. This is **not** the internal monorepo
-> guidance — internal-only paths, build setup, and namespaces have been
-> intentionally removed.
+## The two-tier load model
 
-## Working Style
+- **Skills** (`skills/<name>/SKILL.md`) auto-load when their `description` matches the user's prompt. SKILL.md bodies are eagerly loaded into the conversation — token budget matters per-conversation.
+- **References** (`skills/<name>/references/*.md`) are NOT auto-loaded. The parent SKILL.md indexes them with one-line triggers; Claude opens them on demand. References can be longer because they only load when asked.
 
-Be a partner, not a sycophant. Be direct and constructive, offering solutions
-alongside criticism. If a rule is missing or ambiguous, ask before guessing.
+Implication: keep SKILL.md bodies orientation-shaped (route, don't duplicate). Put depth in references.
 
-If the user provides a rule that's stable enough to encode, write it to a new
-file in the `rules/` directory of their project (not into this plugin —
-the plugin ships read-only rules).
+## Disciplines for editing
 
-For Vue, Nuxt, TypeScript, Pinia, UnoCSS, Storybook, and Playwright, prefer
-official docs (via Context7 MCP if available) over guessing.
+Invoke the matching skill BEFORE editing the corresponding file shape:
 
-## Laioutr Platform Overview
+- **`writing-claude-rules`** (plugin-shipped) for any reference (rule) file. H1 claims a position, rule statement before any subheader, `## Why` is load-bearing, `✘ / ✅` examples for code-shape rules, no invented exceptions.
+- **`superpowers:writing-skills`** (external — Anthropic Superpowers marketplace) for any SKILL.md edit. RED-GREEN-REFACTOR via subagent pressure tests. No skill edit without a failing test first.
 
-Laioutr is a Nuxt 3 + Vue 3 platform for building scalable e-commerce
-storefronts. External developers typically interact with it through:
+If `superpowers:writing-skills` isn't installed, apply the same discipline manually: write a pressure scenario, run it against a subagent with the current SKILL.md, observe failures, edit, re-run.
 
-- **`@laioutr/*`** — Public packages on npmjs.org
-- **`@laioutr-core/*`** — Customer-facing packages (npm.laioutr.cloud)
-- **`@laioutr-app/*`** — First-party integration apps (Shopify, Shopware,
-  Adobe Commerce, Ambiendo)
-- **`@laioutr-org/<provider>__<app>`** — Third-party licensed integration
-  apps (your packages live here)
+## CSO trigger tests (description-only)
 
-Internal namespaces (`@laioutr-private/*`) are not visible externally.
+To test whether the right skill auto-loads for a prompt (separately from whether the body teaches the right thing), dispatch a subagent with **only the skill descriptions** (no bodies, no paths) and a battery of task prompts. The subagent matches each prompt to a skill purely from the description text. This isolates the discovery surface from the implementation surface.
 
-### Core packages you'll consume
+Useful when you suspect a description is too narrow (real triggers don't match) or too eager (unrelated prompts match).
 
-- `@laioutr-core/frontend-core` — Required Nuxt module for all storefronts
-  (routing, state, data fetching)
-- `@laioutr-core/orchestr` — Data orchestration layer using Pinia Colada
-- `@laioutr-core/kit` — Utility functions and composables for building
-  Laioutr Apps
-- `@laioutr-core/core-types` — Shared TypeScript types for the platform
-- `@laioutr-core/canonical-types` — Shared TypeScript types for apps built
-  on top of the platform
+## The three reference shapes
 
-### UI layer
+References fall into three shapes — pick the shape before writing:
 
-- `@laioutr-core/ui-kit` — Atomic Vue 3 components (Button, Input, Icon,
-  etc.)
-- `@laioutr-core/ui` — Commerce-specific organisms built on `ui-kit`
-- `@laioutr-core/ui-app` — Section/block components via `defineSection()`
-- `@laioutr-core/ui-tokens` — Design tokens (Figma → Style Dictionary → CSS
-  variables)
+1. **Single-position rule.** Examples: `parent-prefix-naming.md`, `nuxt-hooks.md`, `no-wrapper-css-overrides.md`. Apply `writing-claude-rules` strictly.
+2. **Multi-rule bundle.** Example: `ui-kit-styling.md` ships tokens + CSS approach + responsive media queries in one file. This violates writing-claude-rules' *"if you find yourself writing a second rule inside the first, split."* Refactor into multiple single-position files when touching.
+3. **System explainer.** Examples: `surface-tone.md`, `schema-field-if.md`. Too complex for a single position — describes a system with channels, tiers, operators. Apply a looser discipline: clarity, completeness, navigable section structure, a "Hard rules" / "Forbidden patterns" section to compress the prescriptive layer. Don't force the writing-claude-rules shape onto these.
 
-## Section Component Pattern
+## Umbrella vs specialist skills
 
-Used in `ui-app` for configurable page sections:
+`laioutr-platform` is the **umbrella** — it triggers on any Laioutr work and co-loads on almost every prompt. The other Laioutr skills (`writing-section-block-definitions`, `writing-storybook-stories`, the figma family) are **specialists** that load alongside the umbrella when their narrower trigger matches.
 
-```ts
-import { defineSection, definitionToProps } from '#frontend-core';
+This is by design (hierarchical partition, not disjoint). When you find yourself wondering "shouldn't only one of these load?", remember the umbrella is intentional context, not a duplicate.
 
-const definition = defineSection({
-  // schema definition
-});
+## Monorepo leakage to watch for
 
-const props = definitionToProps(definition);
-```
+This plugin is curated from Laioutr's internal `.claude/` config. When re-syncing or adding new content, watch for:
 
-When migrating stored configurations across breaking changes, see the
-`writing-section-block-migration-manifest` skill.
+- Hardcoded paths like `packages/ui-kit/` — rewrite as "the ui-kit layer in your project" or use the public `@laioutr-core/*` package names.
+- Internal namespaces (`@laioutr-private/*`) — strip; not externally visible.
+- Tooling references that assume the monorepo's `playground/` directory or internal release pipelines — generalize or remove.
+- Workflows that only make sense for the core team (e.g. forking `laioutr/ui-source` to land upstream patches) need framing as "the rare external-dev case."
 
-## Orchestr — Data Integrations
+[`MAPPING.md`](./MAPPING.md) is the carry-over registry. Update it when adding, splitting, or removing files. It also tracks deferred cleanup (oversize SKILL bodies, pending skill promotions, refs still containing monorepo paths).
 
-Orchestr is the data orchestration framework you'll extend when building
-data integrations for Laioutr Apps. There are four handler types:
+## Public Nuxt aliases vs monorepo internals
 
-| Handler                | Responsibility                                    |
-| ---------------------- | ------------------------------------------------- |
-| **Query Handlers**     | Fetch and return entity IDs                       |
-| **Link Handlers**      | Define entity relationships                       |
-| **Component Resolvers** | Resolve data components for entities             |
-| **Action Handlers**    | Handle mutations and side effects                 |
+`#frontend-core`, `#ui-kit/...`, `#ui/...` are **public Nuxt aliases** exposed by `@laioutr-core/frontend-core` — external devs use these directly. Don't rewrite them as monorepo-relative paths; they ARE the public surface.
 
-Detailed platform documentation is in the Laioutr developer docs site —
-the user should have access via their developer account.
+## Cross-plugin dependencies
 
-## Commit Conventions
+Plugin-bundled skills don't depend on `superpowers:*`. If you reference a superpowers skill in plugin content, frame it as optional ("if you have `superpowers:test-driven-development` installed, use it; otherwise apply the same discipline manually").
 
-Conventional commits (Angular-style):
+## Don't put session state here
 
-```
-feat(package-name): add new feature
-fix(my-app): [TICKET-123] resolve bug in component
-chore: release my-app v1.0.0
-```
+Durable orientation only. Not:
+- "We just split X" — that's git history.
+- "Current todo: rewrite Y" — use `MAPPING.md` or a task tracker.
+- "Sebastian prefers Z" — that's auto-memory if it's behavioral, not a project convention.
 
-See `rules/commit-scope-ui.md` for scope rules.
-
-## Bulk Refactoring Discipline
-
-- **Preserve all comments.** When rewriting files, carry over every JSDoc
-  block, TODO, and inline comment from the original.
-- **Audit after refactors** — exported names → helper types → properties →
-  runtime functions → comments. "Typecheck passes" is not sufficient.
-- **TypeScript diamond inheritance:** When splitting an interface into
-  layers where a child extends two parents that both carry the same
-  property at different widths, don't make the mixin extend the base. Let
-  base properties flow through one chain only.
-
-## How to use this plugin
-
-This plugin ships skills, agents, and rules that encode Laioutr conventions.
-Claude loads them automatically when triggered by the right context:
-
-- **Skills** activate when you describe a matching task (e.g. "implement
-  this Figma component" → `figma-to-component`)
-- **Agents** are specialists you can delegate work to (e.g. `vue-expert`)
-- **Rules** are read whenever Claude touches related code
-
-See `README.md` for the full inventory and `MAPPING.md` for what was
-intentionally excluded from the public plugin.
+Conventions and gotchas, nothing that decays.

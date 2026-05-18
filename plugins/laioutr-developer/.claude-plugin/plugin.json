@@ -1,7 +1,6 @@
 {
   "name": "laioutr-developer",
-  "version": "0.1.0",
-  "description": "Developer-Workflows für Laioutr Frontend/Full-Stack Engineers.",
+  "description": "Workflows, rules, and the docs MCP for developers building on the Laioutr e-commerce platform (Nuxt 3 / Vue 3, custom UI components, sections and blocks, Orchestr data integrations).",
   "author": {
     "name": "Laioutr GmbH"
   },
