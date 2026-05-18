@@ -342,6 +342,8 @@ Document which layer handles which tokens. If the same spacing concern is split 
 
 Components sometimes provide default decorative images (backgrounds, illustrations, empty states, placeholders) that vary by theme and optionally by breakpoint or color mode. These are theme-provided assets rendered via the `Media` component, not content from APIs.
 
+This section covers the **themable** image lane only. For one-off images that ship as files in `runtime/public/` and don't belong in any `ImageSet` (component-specific photos/illustrations, partner logos, custom markers, raster CTA backgrounds), use the `figma-export-assets` skill — it owns format/scale/destination/filename decisions and the export spec.
+
 **Image classification:**
 
 | Category | Source | Themable? | Example |
@@ -825,3 +827,8 @@ digraph subagent_pipeline {
 | Reading annotations but not letting them shape the plan | Annotations are inputs, not just text. `-> UI Kit` overrides default placement; `Go to X` is a routing contract reflected in props/events; `optional` means conditional content. If an annotation contradicts your visual analysis, the annotation wins |
 | Calling `get_design_context` only at section level | Section-level calls return sparse metadata WITHOUT annotations. Annotations only appear in leaf-level (or near-leaf) calls that return full code. Drill down into each meaningful subgroup |
 | Folding designer annotations into "Non-obvious" italic notes | Verbatim designer notes and inferred behavioral notes serve different purposes — reviewers must be able to tell them apart. Use `_Designer note (<node-id> <name>): "<verbatim>"_` for annotations and `_Non-obvious: ..._` for inference |
+
+## Related skills
+
+- `figma-export-assets` — when the plan includes new raster/SVG assets that must land in `runtime/public/` (non-themable images, partner logos, custom markers, illustrations). Run it during implementation to produce the export spec.
+- `figma-to-component` — wiring up the components named by this skill's plan, once tokens, hierarchy, and placement are settled.

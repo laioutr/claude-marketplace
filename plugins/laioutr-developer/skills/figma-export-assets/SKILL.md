@@ -1,16 +1,16 @@
 ---
 name: figma-export-assets
-description: Use when implementing a component from a Figma frame that contains image content (illustrations, photos, logos, markers, screenshots, custom icons) that needs to live as files in the laioutr repo. Excludes themable defaults registered via themeMedia/themeResponsiveMedia — that workflow belongs to figma-design-analysis.
+description: Use when implementing a component from a Figma frame that contains image content (illustrations, photos, logos, markers, screenshots, custom icons) that needs to live as files in your Laioutr-based Nuxt module. Excludes themable defaults registered via themeMedia/themeResponsiveMedia — that workflow belongs to figma-design-analysis.
 ---
 
 # Figma → Repo Asset Export
 
 ## What this is for
 
-Getting visual assets out of a Figma frame and into the right place in the laioutr monorepo, so a Vue/TS component can reference them via a root-relative URL string (`<img src="/cta/cta-banner-bg.png" />`).
+Getting visual assets out of a Figma frame and into the right place in your Laioutr-based Nuxt module, so a Vue/TS component can reference them via a root-relative URL string (`<img src="/cta/cta-banner-bg.png" />`).
 
 In scope:
-- **Custom icons** that are not already in the `IconName` union (`packages/ui-kit/src/runtime/app/types/theme.ts`)
+- **Custom icons** that are not already in the `IconName` union (exported by `@laioutr-core/ui-kit`)
 - **One-off raster images** used by a single section/block/composition (decorative photo, screenshot mock, marker, illustration)
 - **Brand/partner logos** (payment methods, integrations, third-party badges)
 
@@ -65,8 +65,8 @@ For each visual element, classify:
 | Element | Action |
 |---|---|
 | Text node (heading, body copy, label, caption, button text) | **Skip.** Component renders this via `t('key')` — never bake into an exported asset. |
-| Icon that matches a key in `IconName` (`packages/ui-kit/src/runtime/app/types/theme.ts`) | **Skip.** Reuse the existing key. |
-| Existing public asset (search `packages/{ui-kit,ui,ui-app}/src/runtime/**/public/`) | **Skip.** Reference the existing path. |
+| Icon that matches a key in `IconName` (exported by `@laioutr-core/ui-kit`) | **Skip.** Reuse the existing key. |
+| Existing public asset (search your module's `src/runtime/**/public/` and the upstream packages' equivalents under `@laioutr-core/{ui-kit,ui,ui-app}`) | **Skip.** Reference the existing path. |
 | Decorative shape achievable in CSS (gradient, rounded rectangle, border) | **Skip.** Implement in the component's `<style>`. |
 | SDK-rendered chrome (map tiles, autocomplete popovers, browser UI) | **Skip.** Not part of the design. |
 | New leaf image / illustration / logo / marker / photo | **Export.** Goes through the rest of the steps. |
@@ -99,40 +99,39 @@ When in doubt: if the text could plausibly be translated to another language for
 | Photograph (real-world subject, gradient-rich, no hard text edges) | **JPG** | Use for natural photography only. Export at 2× the largest displayed size. |
 | Raster with sharp edges, screenshots of UI, pixel-art, or anything with text/lines that JPG would smudge | **PNG** | Lossless. Use for newsletter teasers, CTA backgrounds, component previews, app screenshots. Export at 2×. |
 | Third-party logo, award badge, or partner certificate supplied as bitmap (no vector source available) | **PNG** | Lossless, preserves text crispness and alpha channel for sticker/cutout shapes. Export at 2×. SVG would be preferable if the source is vector — but for partner-supplied raster artwork, PNG is the realistic choice. |
-| Animated decorative element that must move | **WebM** | Only when animation is essential and SVG/CSS can't do it. See `packages/ui/src/runtime/public/icons/animated/party-popper.webm`. |
+| Animated decorative element that must move | **WebM** | Only when animation is essential and SVG/CSS can't do it. See the animated icons shipped under `@laioutr-core/ui`'s public dir (e.g. `/icons/animated/party-popper.webm`). |
 | Default | **PNG** | If unsure, PNG. |
 
 **Hard rules:**
-- **Never WebP.** Zero WebP files exist in the repo. The toolchain and themes are calibrated for SVG/PNG/JPG only.
+- **Never WebP.** Laioutr's toolchain and themes are calibrated for SVG/PNG/JPG only. Don't introduce WebP in your module.
 - **Never base64 / data URIs in code.** Always a file in `runtime/public/` referenced by a root-relative path string. Base64 defeats browser caching, inflates bundle size, and prevents the asset being themed.
 - **Prefer SVG over raster** whenever the source is vector. If you screenshot the node and it shows hard-edged geometric shapes or text-shaped paths, try SVG first.
 
-## Step 4 — Choose the destination package
+## Step 4 — Choose the destination directory
 
-The asset lives in the same package as its consumer.
+The asset lives in your module's `runtime/public/` (or `runtime/app/public/`), grouped by the role of the consuming component. See `[[three-layer-architecture]]` in `laioutr-platform` for the role definitions.
 
-| Consumer | Package | Public dir |
-|---|---|---|
-| Atomic ui-kit primitive | `packages/ui-kit/` | `src/runtime/app/public/` |
-| Commerce composition (ui) | `packages/ui/` | `src/runtime/public/` ← no `app/` segment |
-| Section / Block (ui-app) | `packages/ui-app/` | `src/runtime/app/public/` |
-| First-party app integration (shopify, ambiendo, …) | `packages/app-<name>/` | `src/runtime/app/public/` |
+| Consumer role | Public dir |
+|---|---|
+| Atom-style primitive (ui-kit role) | `src/runtime/app/public/` |
+| Commerce composition (ui role) | `src/runtime/public/` ← no `app/` segment |
+| Section / Block (ui-app role) | `src/runtime/app/public/` |
 
-**Verify the segment.** `ui` is `runtime/public/`, the others are `runtime/app/public/`. Run `ls packages/<pkg>/src/runtime/` if unsure — whichever segment exists is the one to use.
+**Verify the segment.** The ui role uses `runtime/public/`, the others use `runtime/app/public/`. Run `ls src/runtime/` in your module if unsure — whichever segment exists is the one to use.
 
-If the asset has more than one likely consumer across packages, place it in the lowest-level package they share (usually `ui-kit`) and reference it from there.
+If the asset has more than one likely consumer across roles, place it under the lowest-level role they share (usually the ui-kit role) and reference it from there.
 
-**Production assets vs. Storybook-only fixtures.** Assets that ship with the component (default content, theme images, component previews, real consumer-facing artwork) go in the module's `runtime/public/` (or `runtime/app/public/`) so they're served by the module at runtime. Assets that exist *only* as Storybook story fixtures (e.g. demo payment-logo placeholders that show up only inside `.stories.ts`, never used by the component itself) can live in `packages/<pkg>/playground/.storybook/public/<feature>/` instead — that path is served only inside the Storybook dev server and is not published with the package. When in doubt, prefer `runtime/public/` — if the component ever needs a default value pointing at the asset, it must be runtime-served.
+**Production assets vs. Storybook-only fixtures.** Assets that ship with the component (default content, theme images, component previews, real consumer-facing artwork) go in your module's `runtime/public/` (or `runtime/app/public/`) so they're served at runtime. Assets that exist *only* as Storybook story fixtures (e.g. demo payment-logo placeholders that show up only inside `.stories.ts`, never used by the component itself) can live in your local Storybook's public dir instead (`.storybook/public/<feature>/` or `playground/.storybook/public/<feature>/`, depending on your setup) — that path is served only inside the Storybook dev server and is not published with the module. When in doubt, prefer `runtime/public/` — if the component ever needs a default value pointing at the asset, it must be runtime-served.
 
 ## Step 5 — Choose the path inside `public/`
 
-Group by feature/component, not by format. The leading `/` in the runtime URL maps to the package's public root.
+Group by feature/component, not by format. The leading `/` in the runtime URL maps to the module's public root.
 
 | Pattern | Used for | Example |
 |---|---|---|
 | `/<feature>/<filename>` (ui) | Per-component or per-feature directory | `/cta/cta-banner-bg.png`, `/brand-hero/brand-header-light-desktop-laioutr.svg` |
-| `/img/<feature>/<filename>` (ui-kit) | Atomic-package assets grouped under `img/` | `/img/banner/showcase-laioutr-light-desktop.svg`, `/img/placeholder/1x1-product.png` |
-| `/app-ui/component-previews/<ComponentName>.png` (ui-app) | Cockpit component-picker preview screenshots | `/app-ui/component-previews/SectionFooter.png` |
+| `/img/<feature>/<filename>` (ui-kit) | ui-kit-role assets grouped under `img/` | `/img/banner/showcase-laioutr-light-desktop.svg`, `/img/placeholder/1x1-product.png` |
+| `/app-ui/component-previews/<ComponentName>.png` (ui-app) | Studio component-picker preview screenshots | `/app-ui/component-previews/SectionFooter.png` |
 | `/<feature>/<filename>` (ui-app) | Per-section / per-block feature directory for assets that are not previews | `/awards/holidaycheck-2026-award.png`, `/hero/background-desktop.jpg` |
 | `/placeholders/<aspect>.{jpg,png,svg}` (ui) | Fixture placeholders for stories | `/placeholders/16x9.jpg`, `/placeholders/1x1.svg` |
 | `/logo/<filename>` (ui) | Brand/partner logos | `/logo/logo-light.svg` |
@@ -169,9 +168,9 @@ Decide which of the three paths in "The MCP can't write asset bytes" applies. Pr
 
 ```
 File:   <Figma file URL>
-Nodes:  1:5177 → /Users/sl/src/laioutr/packages/ui/src/runtime/public/location-finder/marker-pinlet.svg (SVG, 1×)
-        1:5421 → /Users/sl/src/laioutr/packages/ui/src/runtime/public/location-finder/marker-current-location.svg (SVG, 1×)
-        1:5176 → /Users/sl/src/laioutr/packages/ui/src/runtime/public/location-finder/map-placeholder.png (PNG, 2×)
+Nodes:  1:5177 → <module-root>/src/runtime/public/location-finder/marker-pinlet.svg (SVG, 1×)
+        1:5421 → <module-root>/src/runtime/public/location-finder/marker-current-location.svg (SVG, 1×)
+        1:5176 → <module-root>/src/runtime/public/location-finder/map-placeholder.png (PNG, 2×)
 ```
 
 Then either:
@@ -181,11 +180,11 @@ Then either:
 
 Verify after the bytes land:
 ```bash
-file packages/ui/src/runtime/public/location-finder/marker-pinlet.svg
+file src/runtime/public/location-finder/marker-pinlet.svg
 # should report "SVG Scalable Vector Graphics image"
 ```
 
-For SVGs, also `grep -l '<text' packages/.../marker-*.svg` — non-empty output means text leaked into the export, go back to Step 2.
+For SVGs, also `grep -l '<text' src/runtime/public/**/marker-*.svg` — non-empty output means text leaked into the export, go back to Step 2.
 
 ## Step 8 — Wire up the component
 
@@ -196,14 +195,14 @@ Outside this skill's scope, but the immediate next step: the component reference
 | Mistake | Fix |
 |---|---|
 | Exporting a wrapper frame with text + image | Drill to the leaf image node. Text is component-rendered, not asset-baked. |
-| Choosing WebP for "better compression" | The repo has zero WebP. Use SVG / PNG / JPG. |
+| Choosing WebP for "better compression" | Laioutr's toolchain is calibrated for SVG / PNG / JPG only — don't introduce WebP. |
 | Inlining as base64 in a `.vue` file | Always write to `runtime/public/` and reference via a `/...` path. |
-| Re-exporting an icon that's already in `IconName` | Search the union first (`grep '|' packages/ui-kit/src/runtime/app/types/theme.ts`). Reuse the key. |
-| Adding a new SVG to `ui-kit/.../assets/icons/` to make a story work | Theme icons are design-owned. Raise the gap with design instead. |
+| Re-exporting an icon that's already in `IconName` | Look up the `IconName` union in `@laioutr-core/ui-kit` (editor go-to-definition, or query the docs MCP) and reuse the key. |
+| Adding a new SVG to the upstream ui-kit theme icon set to make a story work | Theme icons are design-owned. Raise the gap with design instead — or follow the resolution ladder (prop override → local custom component → fork `laioutr/ui-source` → upstream issue) if you need to land it locally. |
 | Saving 1× on a non-vector asset | PNG/JPG should be exported at 2× and let the browser downscale. SVG is scale-independent. |
 | Filename like `Bildschirmfoto 2026-03-12.png` or `1-5176.png` | Describe the content: `map-placeholder.png`, `cta-banner-bg.png`. |
-| Putting the file in `runtime/public/` for a package that uses `runtime/app/public/` (or vice versa) | Check `ls packages/<pkg>/src/runtime/` before deciding. |
-| Placing a *production* asset in `playground/.storybook/public/` instead of the module's `runtime/public/` | Storybook serves the module's `runtime/public/` already; assets the component itself references must live there or they won't be served at runtime. Storybook-only story fixtures (never referenced by the component) can stay in `playground/.storybook/public/`. |
+| Putting the file in `runtime/public/` when the role uses `runtime/app/public/` (or vice versa) | Check `ls src/runtime/` in your module before deciding. |
+| Placing a *production* asset in your Storybook's public dir instead of the module's `runtime/public/` | Storybook serves the module's `runtime/public/` already; assets the component itself references must live there or they won't be served at runtime. Storybook-only story fixtures (never referenced by the component) can stay in the Storybook public dir. |
 | Writing a placeholder file because the MCP can't export bytes | Don't. Stop with a clear export spec and let the user / a REST script land the real bytes. |
 
 ## Pre-export checklist
@@ -215,7 +214,7 @@ Outside this skill's scope, but the immediate next step: the component reference
 - [ ] Verified with `get_screenshot(contentsOnly: true)` that each candidate is text-free and chrome-free
 - [ ] Cross-checked against `IconName` union and existing `public/` dirs to eliminate duplicates
 - [ ] Picked format per Step 3 (no WebP, no base64)
-- [ ] Picked package per Step 4 (verified `runtime/public/` vs `runtime/app/public/` segment)
+- [ ] Picked destination per Step 4 (verified `runtime/public/` vs `runtime/app/public/` segment)
 - [ ] Picked path per Step 5 (feature-grouped, kebab-case)
 - [ ] Picked filename per Step 6 (no node IDs, no timestamps, no generic names)
 - [ ] Produced an export spec the user can act on, OR ran a REST API export if a token exists

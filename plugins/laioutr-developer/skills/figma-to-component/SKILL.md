@@ -454,3 +454,9 @@ If Figma data is unavailable (tool failure, no URL provided), skip this section 
 | Using `!important` to fix styling conflicts | Resolve structurally via BEM modifier, adjusted specificity, or CSS custom property. `!important` is only acceptable for third-party overrides |
 | Setting `isLoading = true` without resetting on all paths | Every early return, error catch, and success path must reset the flag. Missing resets permanently lock the UI |
 | Dividing by a prop that can be zero or undefined | Guard with `b === 0 ? 0 : a / b` or validate before computing. Check prop defaults — `amount: 0` is a common offender |
+
+## Related skills
+
+- `figma-export-assets` — run **before** wiring up `<img>` / `<Media>` references if the component needs a new raster/SVG file (illustration, partner logo, custom marker, CTA background). Owns the format/scale/destination/filename decisions and the export spec.
+- `figma-design-analysis` — upstream of this skill: produces the component hierarchy, token map, and placement plan that this skill implements.
+- `component-architecture` — bridges between the two when a plan needs an explicit props/slots/events spec before implementation starts.
