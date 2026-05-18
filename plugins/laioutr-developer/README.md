@@ -74,7 +74,7 @@ Claude eyeballs the frame and writes one 400-line `.vue` file with
 inline CSS and ad-hoc breakpoint logic.
 
 **After:** Claude runs the `figma-design-analysis` skill to decompose
-the frame, drafts a component-API spec with `component-architecture`,
+the frame, drafts a component-API spec with `figma-component-architecture`,
 checks `@laioutr-core/ui-kit` for upstream primitives before writing
 markup (per `ui-ui-kit-first.md`), and uses CSS-first responsive
 patterns rather than `useBreakpoints` (per
@@ -122,7 +122,7 @@ documented, not a last resort whispered between developers.
     design (or from a `figma-design-analysis` plan).
   - `figma-design-analysis` — decomposing a Figma frame into a
     component hierarchy and implementation plan.
-  - `component-architecture` — turning a Figma analysis into a
+  - `figma-component-architecture` — turning a Figma analysis into a
     props / slots / events API spec.
   - `writing-claude-rules` — authoring a new rule file in a project's
     `rules/` or `.claude/rules/`.
@@ -241,7 +241,7 @@ laioutr-developer/
     │   └── SKILL.md                         # Inline (no extra references)
     ├── figma-design-analysis/               # Figma frame → component hierarchy
     ├── figma-to-component/                  # Implement Vue from Figma
-    ├── component-architecture/              # Figma analysis → component API spec
+    ├── figma-component-architecture/        # Figma analysis → component API spec
     ├── writing-claude-rules/                # Author a new rule file
     └── adr/                                 # Capture an ADR
 ```

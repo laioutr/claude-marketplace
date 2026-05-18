@@ -1,17 +1,17 @@
 ---
-name: component-architecture
-description: Use when producing component API specs (props, slots, events, state, composition) from a figma-design-analysis plan, before implementation with figma-to-component. Bridges structural analysis and code.
+name: figma-component-architecture
+description: Use when producing component API specs (props, slots, events, state, composition) from a figma-design-analysis plan, before implementation with figma-to-component. Bridges structural analysis and code. Step 2 of the Laioutr Figma → component pipeline.
 ---
 
-# Component Architecture
+# Figma Component Architecture
 
 ## Overview
 
 Produce detailed component API specs from a `figma-design-analysis` plan. Takes structural input (hierarchy, tokens, variant matrix, existing matches, implementation order) and outputs the architectural decisions — props, slots, events, internal state, composition patterns — so that `figma-to-component` can implement without making design choices.
 
-**Pipeline position:** `figma-design-analysis` -> **component-architecture** -> `figma-to-component`
+**Pipeline position:** `figma-design-analysis` -> **figma-component-architecture** -> `figma-to-component`
 
-**Scope boundary:** Design system components only (`@laioutr-core/ui-kit` and `@laioutr-core/ui`). Every component is a self-contained, composable primitive. Components receive all data via props, emit events for user interactions, and manage only internal UI state. No data fetching, no store access, no external system connections.
+**Scope boundary:** Presentational components only. Every component is a self-contained, composable primitive. It receives all data via props, emits events for user interactions, and manages only internal UI state. No data fetching, no store access, no external system connections — those belong in the Section/Block wrapper (see `writing-section-block-definitions`).
 
 ## When to Use
 
@@ -61,7 +61,7 @@ digraph component_architecture {
 
 **Two high-frequency rules to keep in mind throughout:**
 
-- **`useTheme()` is allowed; `useNuxtApp()` / `useRoute()` / `useRouter()` are forbidden.** Theme-provided assets come from `useTheme().image()`. Route-aware state (active link, current path) must be accepted as a prop — the ui-app wrapper resolves it.
+- **`useTheme()` is allowed; `useNuxtApp()` / `useRoute()` / `useRouter()` are forbidden.** Theme-provided assets come from `useTheme().image()`. Route-aware state (active link, current path) must be accepted as a prop — the Section/Block wrapper resolves it.
 - **Classification before naming.** Apply the removal test (does this component make sense outside its parent's context?) to decide `(reusable)` vs `(sub-component of <Parent>)`. The name follows the classification, not the other way around.
 
 ## Phase Priority
@@ -107,7 +107,7 @@ Read existing components referenced in the analysis document to ground the archi
 
 **Cross-plan shared components:** When the analysis claims a component is shared across plans (e.g., "InfoBox is also used by checkout plan's LoyaltyPointsRedemption"), verify the claim by reading the referenced analysis. If the other analysis does not mention the shared component by name, flag the discrepancy. If it does, ensure the component is specced once (in whichever architecture spec comes first) and referenced by the other. Note the shared dependency in the Integration Requirements section.
 
-**Search for semantically similar components:** Don't limit Phase 1 searches to components explicitly named in the analysis. Search for components with similar *semantic roles* — if the design has discount badges, search for "discount", "flag", "badge" across ui-kit/ui. If it has status indicators, search for "status", "notice", "alert". The analysis may reference `ComponentA` when a better-fitting `ComponentB` exists that the analysis author didn't know about. Discovering these in Phase 1 prevents speccing new components that duplicate existing ones or using the wrong existing component.
+**Search for semantically similar components:** Don't limit Phase 1 searches to components explicitly named in the analysis. Search for components with similar *semantic roles* — if the design has discount badges, search for "discount", "flag", "badge" across upstream `@laioutr-core/ui-kit` and `@laioutr-core/ui`. If it has status indicators, search for "status", "notice", "alert". The analysis may reference `ComponentA` when a better-fitting `ComponentB` exists that the analysis author didn't know about. Discovering these in Phase 1 prevents speccing new components that duplicate existing ones or using the wrong existing component.
 
 **Search for patterns:**
 ```bash
@@ -186,7 +186,7 @@ Present challenges as numbered questions. Wait for answers before finalizing.
 
 ## Output Format
 
-Write to `docs/plans/YYYY-MM-DD-<topic>-component-architecture.md`. Sections: Conventions, Architecture Decisions (from Phase 2), Component Specs grouped by implementation phase, Resolved Challenges (from Phase 4), Integration Requirements deferred to ui-app, Open Questions.
+Write to your project's plans directory using a date-prefixed slug — the convention is `docs/plans/YYYY-MM-DD-<topic>-component-architecture.md`. Sections: Conventions, Architecture Decisions (from Phase 2), Component Specs grouped by implementation phase, Resolved Challenges (from Phase 4), Integration Requirements deferred to the Section/Block wrapper, Open Questions.
 
 **Open [`references/output-template.md`](references/output-template.md)** for the full markdown template with examples for each section.
 
@@ -195,8 +195,8 @@ Write to `docs/plans/YYYY-MM-DD-<topic>-component-architecture.md`. Sections: Co
 - Produce implementation code (that's `figma-to-component`)
 - Redo structural analysis, token mapping, or package placement (that's `figma-design-analysis`)
 - Specify CSS patterns, BEM naming, or Storybook stories (implementation details)
-- Plan data integration, Pinia stores, or data-fetching composables (ui-app scope)
-- Plan ui-app Section/Block wrappers (out of scope)
+- Plan data integration, Pinia stores, or data-fetching composables (Section/Block wrapper scope)
+- Plan Section/Block wrappers themselves (out of scope — see `writing-section-block-definitions`)
 - Spec page-level components, layouts, or Nuxt routing (out of scope)
 
 ## Common Mistakes
@@ -206,19 +206,19 @@ Write to `docs/plans/YYYY-MM-DD-<topic>-component-architecture.md`. Sections: Co
 | Specifying CSS/BEM patterns in the architecture | Architecture defines the API (props, slots, events). CSS is implementation. |
 | Using raw provide/inject instead of createContext | Always use `createContext` from reka-ui for compound component state. |
 | Using createContext for passing data | createContext is for UI config (size, expanded state, IDs). Data flows via props. |
-| Components that fetch data or call APIs | Components receive all data via props. Data integration belongs in ui-app. |
-| Speccing page components or layouts | Skip them, note they belong in ui-app. |
+| Components that fetch data or call APIs | Components receive all data via props. Data integration belongs in the Section/Block wrapper. |
+| Speccing page components or layouts | Skip them, note they belong in a Section/Block wrapper or at the page level. |
 | Dumping all specs at once | Present section-by-section grouped by implementation phase. |
 | Asking about trivial components | Only ask when the decision materially affects architecture. |
 | Props interface missing data that the component renders | Every piece of rendered data must trace back to a prop. Flag incomplete boundaries. |
 | Over-using createContext for direct parent-child | createContext is for 2+ levels of nesting. Direct children use props. |
 | Skipping the challenge phase | Always run consistency, over-engineering, under-spec, boundary, and composability checks. |
-| Specifying defineSection or defineBlock patterns | Section/block wrappers are ui-app concerns, out of scope. |
+| Specifying defineSection or defineBlock patterns | Section/Block wrappers are out of scope — see `writing-section-block-definitions`. |
 | Not reading existing components first | Phase 1 grounds specs in codebase reality. Skipping it leads to inconsistent APIs. |
 | Using `Link` type from core-types in props | `Link` requires frontend-core for resolution. Use plain `string` hrefs or a slot for link rendering. |
-| Importing from frontend-core or orchestr in ui/ui-kit | Forbidden dependency. Components must never depend on data/routing layer packages. |
+| Importing from frontend-core or orchestr in a presentational component | Forbidden dependency. Presentational components must never depend on data/routing layer packages. |
 | Accessing frontend-core state via Nuxt globals | `useNuxtApp()`, `useRoute()`, `useRouter()` are indirect dependencies. Locale via `useLocale()`, active state via props. |
-| Treating existing rule violations as precedent | If an existing component in ui/ui-kit violates a constraint (e.g., uses `useRouter()`), do not replicate. Flag it and follow the rule for new specs. |
+| Treating existing rule violations as precedent | If an existing upstream component violates a constraint (e.g., uses `useRouter()`), do not replicate. Flag it and follow the rule for new specs. |
 | Props shaped like canonical entities | Props describe component behavior, not data models. Map entity fields to behavioral props (e.g. `price: Money`, not `product: ProductEntity`). |
 | List item type shaped like a domain entity | Item arrays should use the child component's props interface (`Pick<ChildProps, ...>[]`), not entity types. |
 | Treating async operation state as internal | Loading/success/error from parent-owned mutations must be props, not internal state. Only timed visual transitions (animation flags) are internal. |
@@ -245,3 +245,12 @@ Write to `docs/plans/YYYY-MM-DD-<topic>-component-architecture.md`. Sections: Co
 | Duplicating child fields in parent props | When a parent composes a child 1:1, accept the child's props type as a single prop (`deliveryEstimate: DeliveryEstimateProps`) instead of flattening its fields. |
 | Only searching for components named in the analysis | Phase 1 should also search for semantically similar components (e.g., "discount", "badge", "flag") — the analysis may reference the wrong existing component or miss a better fit. |
 | Assuming formatting helpers exist for all value types | Only `$money()` and `$measurement()` are confirmed. Check whether helpers exist for other value types (`Timespan`, etc.) and flag missing ones as prerequisites. |
+
+## Related skills
+
+The Laioutr Figma → component pipeline is: **figma-design-analysis → figma-component-architecture → figma-to-component → writing-section-block-definitions**. This skill is the second step.
+
+- `figma-design-analysis` — upstream. Produces the structural plan (hierarchy, tokens, variant matrix, placement, implementation order) that this skill turns into a props/slots/events/state spec.
+- `figma-to-component` — downstream. Implements the components one at a time using the spec this skill produces, so it never has to make API design choices during implementation.
+- `figma-export-assets` — runs alongside `figma-to-component` when the implementation needs new raster/SVG files in `runtime/public/`.
+- `writing-section-block-definitions` — after implementation. Builds the `defineSection` / `defineBlock` wrapper that maps canonical entities onto this skill's spec'd props. The Integration Requirements section of this skill's output is the brief for that wrapper.

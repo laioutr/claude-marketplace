@@ -7,7 +7,7 @@ A Nuxt module build fails with these errors when `defineProps<T>()` resolves thr
 [vue-sfc-transformer] Unresolvable type reference or unsupported built-in utility type
 ```
 
-`vue-sfc-transformer` can't walk the type graph across package boundaries (pnpm workspace symlinks, published `node_modules` entries, etc.). The error names no file. `typecheck` passes; only the actual Nuxt-module build (`nuxt-module-build`, surfaced via your project's build command — `turbo run <pkg>#build`, `pnpm build`, `nuxi build`, or equivalent) reveals the problem.
+`vue-sfc-transformer` can't walk the type graph across package boundaries (published `node_modules` entries, workspace symlinks, etc.). The error names no file. `typecheck` passes; only the actual Nuxt-module build reveals the problem — run `nuxi build` or `pnpm build` (or `turbo run <pkg>#build` if you're in a monorepo).
 
 ## Rule
 

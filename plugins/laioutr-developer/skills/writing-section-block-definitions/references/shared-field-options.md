@@ -2,10 +2,10 @@
 
 Canonical reference: [Shared field factories — Laioutr docs](https://docs.laioutr.io/apps/app-development/shared-field-factories) (the `defineSelectOptions` helper is part of the same set).
 
-Exported `*Options` arrays in `shared-fields/` must preserve literal types. Use the `defineSelectOptions` helper:
+Exported `*Options` arrays in `shared-fields/` must preserve literal types. Use the `defineSelectOptions` helper (same upstream provider as `defineField` / `defineFieldset` / `defineSection`; check the canonical docs above for the exact import path your version exposes):
 
 ```ts
-import { defineSelectOptions } from './defineFieldset';
+import { defineSelectOptions } from '#frontend-core';
 
 export const myOptions = defineSelectOptions([
   { label: 'Foo', value: 'foo' },

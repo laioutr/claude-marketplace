@@ -1,6 +1,6 @@
 # Output Template
 
-The final document produced by `component-architecture`. Write to `docs/plans/YYYY-MM-DD-<topic>-component-architecture.md`.
+The final document produced by `figma-component-architecture`. Write to `docs/plans/YYYY-MM-DD-<topic>-component-architecture.md` (the filename suffix names the document type and is stable across the skill rename).
 
 ## Template
 
@@ -50,9 +50,9 @@ Date: [date]
 |---|---|---|
 | 1 | [from Phase 4] | [user's answer] |
 
-## Integration Requirements (deferred to ui-app)
+## Integration Requirements (deferred to Section/Block wrapper)
 
-- [Consumer] needs [data] from [source], mediated by [page/section wrapper]
+- [Consumer] needs [data] from [source], mediated by [page/Section/Block wrapper]
 - [If no cross-organism data dependencies: omit this section]
 
 ## Open Questions

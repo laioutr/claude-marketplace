@@ -84,8 +84,8 @@ if: ['==', ['get', 'items'], [[]]]
 
 ## Available operators
 
-The Studio engine registers `defaultOperators` plus the array and type
-bundles from `@laioutr/expression`. Aliases in parentheses.
+The Studio engine registers the default operator set plus the array and
+type bundles from its expression engine. Aliases in parentheses.
 
 | Category   | Operators                                                                  |
 | ---------- | -------------------------------------------------------------------------- |
@@ -210,14 +210,15 @@ hide the Studio control the way `if` does.
 
 ## Lives where
 
-- Type: `SchemaCondition` in `@laioutr-core/core-types/fields`. Derives
-  the operator union from `@laioutr/expression`'s `defaultOperators` +
-  array + type bundles via `type` imports — no runtime dependency.
+- Type: `SchemaCondition` in `@laioutr-core/core-types/fields`. The
+  operator union is derived from the expression engine's default
+  operators plus array and type bundles, exposed via `type` imports —
+  no runtime dependency.
 - Runtime engine: Studio's schema-conditions evaluator instantiates
   `JsonExpression` with the matching operator bundles. The type and
   runtime are configured separately upstream; keep them in sync if a
   future Studio release adds another operator bundle.
-- Section/block authoring: anywhere in your module's ui-app-layer
+- Section/block authoring: anywhere in your module
   (typically `src/runtime/app/section/`, `src/runtime/app/block/`,
   `src/runtime/app/shared-fields/`).
 

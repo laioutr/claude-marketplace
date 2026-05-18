@@ -7,7 +7,7 @@ description: Use when authoring or modifying a `defineSection` / `defineBlock` s
 
 ## Overview
 
-Sections and blocks in Laioutr's `ui-app` layer are configured via `defineSection()` / `defineBlock()` schemas. Conventions cover four orthogonal concerns:
+Sections and blocks are configured via `defineSection()` / `defineBlock()` schemas (helpers exported from `@laioutr-core/ui-app`). Conventions cover four orthogonal concerns:
 
 1. **Structural placement** — which sidebar group a field lives in (fixed order, top to bottom)
 2. **Canonical names** — one concept → one field `name` across the module

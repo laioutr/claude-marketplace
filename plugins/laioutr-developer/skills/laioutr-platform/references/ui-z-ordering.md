@@ -16,6 +16,6 @@ Raw integers are only OK for **local** stacking inside a section (e.g. slider ar
 
 Portaled content (reka-ui `Dialog`, `Sheet`, `DropdownMenu`, `AlertDialog`) mounts at `<body>` and must use the token scale.
 
-Sticky/fixed sections that must stay visible over later sections need `rendering: { isolate: false }` in their `ui-app` definition — otherwise the stacking context traps them. Don't disable isolation for any other reason.
+Sticky/fixed sections that must stay visible over later sections need `rendering: { isolate: false }` in their `defineSection` config — otherwise the stacking context traps them. Don't disable isolation for any other reason.
 
 `--z-index-modal` covers both the backdrop and the body; DOM/portal order handles stacking between open modals. Don't invent a separate overlay tier.

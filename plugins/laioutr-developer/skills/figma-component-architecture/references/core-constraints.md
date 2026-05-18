@@ -1,6 +1,6 @@
 # Core Constraints
 
-The architectural rules that govern every component spec produced by `component-architecture`. Covers the design-system-only scope, the forbidden dependencies (frontend-core, orchestr, page/layout patterns), the value-object types allowed in prop interfaces, the reusable-vs-sub-component classification, and the two permitted state-sharing patterns (props+events, reka-ui `createContext`).
+The architectural rules that govern every component spec produced by `figma-component-architecture`. Covers the design-system-only scope, the forbidden dependencies (frontend-core, orchestr, page/layout patterns), the value-object types allowed in prop interfaces, the reusable-vs-sub-component classification, and the two permitted state-sharing patterns (props+events, reka-ui `createContext`).
 
 ## Design system components only
 
@@ -12,15 +12,15 @@ Components are self-contained, composable design system primitives. They:
 
 ### Why this separation matters
 
-Components in `@laioutr-core/ui-kit` and `@laioutr-core/ui` **must not** integrate into the section/block mechanism (`defineSection`/`defineBlock` from `@laioutr-core/ui-app`). Three reasons:
+Presentational components **must not** integrate into the section/block mechanism (`defineSection`/`defineBlock`). Three reasons:
 
 1. **Reusability.** Sections/blocks cannot be rendered without a harness. A component that is a section can only be used inside the section rendering pipeline — it cannot be composed by other developers building custom components on top of existing ones.
 
-2. **Data model decoupling.** The `ui-app` layer receives data as structured entities adhering to `@laioutr-core/canonical-types`. These types are specific to external data sources and may change. Components must not be coupled to canonical entity shapes — their props describe how the component *works and behaves*, not what data model it consumes.
+2. **Data model decoupling.** Section/Block wrappers receive data as structured entities adhering to `@laioutr-core/canonical-types`. These types are specific to external data sources and may change. Presentational components must not be coupled to canonical entity shapes — their props describe how the component *works and behaves*, not what data model it consumes.
 
 3. **Two-part thinking.** This architecture enforces a clean mental model:
-   - `ui-kit` / `ui` = purely presentational. Props describe component behavior. Can be reused in many contexts.
-   - `orchestr` / `frontend-core` / `ui-app` = data layer. Structured entities are mapped to component props. Loose coupling between data models and rendering.
+   - **Presentational layer** = props describe component behavior. Can be reused in many contexts.
+   - **Data layer (Sections/Blocks + Orchestr)** = structured entities are mapped to component props. Loose coupling between data models and rendering.
 
    Mixing data operations into components means every change to the data layer (new API, different store, different platform) requires editing component files, even if the UI hasn't changed.
 
@@ -32,13 +32,13 @@ digraph data_flow {
     node [shape=box];
 
     subgraph cluster_data {
-        label="ui-app (data boundary — OUT OF SCOPE)";
+        label="Section/Block wrapper (data boundary — OUT OF SCOPE)";
         style=dashed;
         block [label="Block / Section\nfetches structured entities via orchestr\nmaps canonical types to component props\nhandles mutations via action handlers"];
     }
 
     subgraph cluster_presentational {
-        label="ui / ui-kit (presentational boundary — IN SCOPE)";
+        label="Presentational component (IN SCOPE)";
         component [label="Component\nreceives plain props: Media, Money, strings, enums\nemits events: @add-to-cart, @select, @remove\nknows nothing about where data came from"];
     }
 
@@ -47,17 +47,17 @@ digraph data_flow {
 }
 ```
 
-This mapping layer is out of scope for component architecture specs. When a component needs data, spec the props it accepts — the ui-app wrapper decides how to provide them.
+This mapping layer is out of scope for component architecture specs. When a component needs data, spec the props it accepts — the Section/Block wrapper decides how to provide them.
 
 ## No page or layout patterns
 
-Skip page-level components that orchestrate data flow, manage route state, or register as sections/blocks. Note them as belonging in ui-app and move on. The test is behavioral, not nominal: if the component could be rendered in Storybook with static props and no data layer, it is presentational — even if its name contains "Layout" or "Page." A responsive two-slot container (e.g., `form` + `summary` columns) is a presentational layout component and should be specced.
+Skip page-level components that orchestrate data flow, manage route state, or register as sections/blocks. Note them as belonging in a Section/Block wrapper and move on. The test is behavioral, not nominal: if the component could be rendered in Storybook with static props and no data layer, it is presentational — even if its name contains "Layout" or "Page." A responsive two-slot container (e.g., `form` + `summary` columns) is a presentational layout component and should be specced.
 
 ## Forbidden dependencies
 
-Components in `@laioutr-core/ui-kit` and `@laioutr-core/ui` **must never** depend on `frontend-core`, `orchestr`, or any `@laioutr-app/*` package. These packages are data/routing layer concerns. Any import from them in a component file is an architectural violation — it couples the presentational layer to platform internals.
+Presentational components **must never** depend on `frontend-core`, `orchestr`, or any `@laioutr-app/*` package. These packages are data/routing layer concerns. Any import from them in a component file is an architectural violation — it couples the presentational layer to platform internals.
 
-This rule extends beyond direct imports. Accessing state that originates from these packages through Nuxt/Vue globals (`useNuxtApp()`, `useRoute()`, `useRouter()`, `useRuntimeConfig()`) is equally forbidden — these are indirect dependencies on the data/routing layer. If a component needs route-aware behavior (e.g., active link highlighting), accept it as a prop (`active`, `isActive`) and let the ui-app wrapper determine the value.
+This rule extends beyond direct imports. Accessing state that originates from these packages through Nuxt/Vue globals (`useNuxtApp()`, `useRoute()`, `useRouter()`, `useRuntimeConfig()`) is equally forbidden — these are indirect dependencies on the data/routing layer. If a component needs route-aware behavior (e.g., active link highlighting), accept it as a prop (`active`, `isActive`) and let the Section/Block wrapper determine the value.
 
 **Theme-provided vs prop-provided resources:** Some visual assets (background images, decorative icons, placeholders, empty state illustrations) come from the theme system via `useTheme().image()` rather than from props. The test: does every instance of this component show the same asset (per theme), or does each usage show different data? If the asset varies by theme but not by usage, it belongs in the theme system and is an implementation detail — do not spec a prop for it. If the asset varies per usage (e.g., each product has its own image), it's a `Media` prop. When the analysis is ambiguous (e.g., "accept a Media prop or icon name"), check whether an existing component with similar theme-dependent visuals uses props or `useTheme()`, and flag the ambiguity in Phase 2 if unresolved.
 
@@ -82,9 +82,9 @@ All imported from `@laioutr-core/core-types/common`.
 
 **Formatting helper completeness check:** When speccing components that render value types, verify that a formatting helper exists for each type used. If a component accepts `Timespan` but no `$timespan()` helper exists yet, flag the missing helper as a prerequisite in the spec document. Do not assume helpers exist for all value types — `$money()` and `$measurement()` exist, but others may not. Search for `export function $` or `provide.*\$` in the codebase to discover available helpers.
 
-**Why these are allowed but canonical entities are not:** These are *value objects* — small, self-contained types that describe how something looks or costs. They carry no identity, no lifecycle, and no relationships to other entities. Canonical entity types from `@laioutr-core/canonical-types` (e.g., `ProductVariant`, `Product`, `Cart`) are data-model types with identity, components, and links managed by orchestr. Components must never accept entity types as props — the ui-app mapping layer decomposes entities into value objects and primitives.
+**Why these are allowed but canonical entities are not:** These are *value objects* — small, self-contained types that describe how something looks or costs. They carry no identity, no lifecycle, and no relationships to other entities. Canonical entity types from `@laioutr-core/canonical-types` (e.g., `ProductVariant`, `Product`, `Cart`) are data-model types with identity, components, and links managed by orchestr. Components must never accept entity types as props — the Section/Block wrapper decomposes entities into value objects and primitives.
 
-**Do NOT use `Link`** from core-types — not even as a type-only import. Although `Link` lives in core-types, it cannot be rendered as an `<a>` tag without resolution (e.g., `LinkReference` contains `{ type: 'Product', slug: 'blue-shoe' }`, not a URL). Accepting it as a prop couples the component's API to the platform's routing model. Resolution happens once at the ui-app boundary, and resolved strings flow down.
+**Do NOT use `Link`** from core-types — not even as a type-only import. Although `Link` lives in core-types, it cannot be rendered as an `<a>` tag without resolution (e.g., `LinkReference` contains `{ type: 'Product', slug: 'blue-shoe' }`, not a URL). Accepting it as a prop couples the component's API to the platform's routing model. Resolution happens once at the Section/Block boundary, and resolved strings flow down.
 
 **When components need link-behavior differentiation** (e.g., `target="_blank"` for external links, smooth scroll for anchors): decompose the needed attributes into flat props or use a slot.
 

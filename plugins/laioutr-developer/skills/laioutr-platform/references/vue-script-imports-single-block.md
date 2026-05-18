@@ -32,7 +32,7 @@ import Icon from '#ui-kit/components/Icon/Icon.vue';
 ## The rule
 
 - **All imports live in `<script setup>`** — including type imports (`import type { ... }`).
-- **`export interface` / `export type` / `export const` declarations** also live in `<script setup>` (Vue 3.3+ hoists them correctly — see `ProductSlider.vue` for a canonical example).
+- **`export interface` / `export type` / `export const` declarations** also live in `<script setup>` (Vue 3.3+ hoists them correctly).
 - **No `<script lang="ts">` block** unless you have a very specific reason (e.g. `defineOptions` equivalent that setup can't express). If you do keep one, it must contain **zero imports**.
 
 ## The fix
@@ -64,7 +64,7 @@ It would compile. But it preserves a two-block structure that no longer earns it
 
 ## Exception
 
-Page-level `definePageMeta` callers or rare cases where the non-setup block carries compiler directives that `<script setup>` genuinely cannot express. These are extremely rare in this repo — if you think you need one, check first.
+Page-level `definePageMeta` callers or rare cases where the non-setup block carries compiler directives that `<script setup>` genuinely cannot express. These are extremely rare in practice — if you think you need one, check first.
 
 ## Do not consolidate opportunistically
 

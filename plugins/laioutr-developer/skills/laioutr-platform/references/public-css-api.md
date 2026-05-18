@@ -1,8 +1,6 @@
 # Public CSS API
 
-Every component your module publishes ships its CSS class names as part of its public surface. Downstream consumers of your Nuxt module write CSS against what they see. The rules below define what that surface must look like, regardless of which role the component plays (atom-style primitive, organism, section, or block).
-
-Where these rules say "components in the ui-kit layer / ui layer / ui-app layer", they mean any component your module contributes that plays that role — typically the files under your module's `src/runtime/components/` or `src/runtime/app/` directory (or wherever your Nuxt module exposes its components).
+Every component your module publishes ships its CSS class names as part of its public surface. Downstream consumers of your Nuxt module write CSS against what they see. The rules below apply to every component you ship — presentational primitives in `src/runtime/components/`, Section/Block wrappers in `src/runtime/app/section|block/`, all of them.
 
 ## The four override surfaces
 
@@ -146,4 +144,4 @@ Consumers of your module cannot reliably restyle its components if class names c
 - [`no-wrapper-css-overrides.md`](./no-wrapper-css-overrides.md) — the prop-not-selector mechanism for cross-component styling
 - [`unique-component-names.md`](./unique-component-names.md) — component file names (which become block names) must be globally unique
 - [`parent-prefix-naming.md`](./parent-prefix-naming.md) — when to use compound naming for sub-components
-- [`storybook-stories.md`](./storybook-stories.md) — story conventions covering Public-Parts visibility
+- The sibling `writing-storybook-stories` skill covers story conventions, including Public-Parts visibility

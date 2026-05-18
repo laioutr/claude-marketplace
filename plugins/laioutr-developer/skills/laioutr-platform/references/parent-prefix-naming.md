@@ -47,6 +47,6 @@ When in doubt, the name should answer "what kind of thing is this?" before "wher
 
 ## Relation to other rules
 
-- Globally unique basenames across the ui-kit / ui / ui-app component layers: `rules/unique-component-names.md`.
+- Globally unique component basenames within your module: [`unique-component-names.md`](./unique-component-names.md).
 
 This rule sits in front of name-mechanics rules: decide *whether* to use the compound naming pattern at all before applying the mechanics.

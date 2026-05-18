@@ -1,6 +1,6 @@
 # Component Spec Format
 
-How to write a single component spec produced by `component-architecture`. Covers when to introduce components not in the analysis, the trivial vs full spec templates, prop-boundary rules (parent-owned state, unions over flags, state transitions, i18n boundary, list item types), and the Vue API conventions every spec must follow.
+How to write a single component spec produced by `figma-component-architecture`. Covers when to introduce components not in the analysis, the trivial vs full spec templates, prop-boundary rules (parent-owned state, unions over flags, state transitions, i18n boundary, list item types), and the Vue API conventions every spec must follow.
 
 ## Introducing components not in the analysis
 
@@ -110,7 +110,7 @@ Apply the same principle to event payloads and slot scoped data. If two fields a
 
 ## State transitions for multi-state components
 
-When a component's state prop has 3+ values with non-obvious transitions, document valid transitions in the spec. Include which event triggers each transition and which transitions are invalid. Without this, the implementer and the ui-app wrapper author may disagree on valid transitions.
+When a component's state prop has 3+ values with non-obvious transitions, document valid transitions in the spec. Include which event triggers each transition and which transitions are invalid. Without this, the implementer and the Section/Block wrapper author may disagree on valid transitions.
 
 ```markdown
 **State Transitions:**
@@ -136,9 +136,9 @@ When unsure, check Phase 1 findings for how existing components handle similar t
 
 ## List item types
 
-When a parent component renders a list of children, the item type should be the child component's props interface (or a subset via `Pick<>`), not a domain entity type. If the item shape starts resembling a canonical entity rather than a component contract, that is a sign the mapping responsibility has leaked from ui-app into the component.
+When a parent component renders a list of children, the item type should be the child component's props interface (or a subset via `Pick<>`), not a domain entity type. If the item shape starts resembling a canonical entity rather than a component contract, that is a sign the mapping responsibility has leaked from the Section/Block wrapper into the component.
 
-**When the child component's interface is unknown (cross-plan dependency):** If the child is planned in another analysis with no architecture spec yet, prefer a **slot** over an array prop. A slot defers the interface decision to the parent (ui-app wrapper), which will know the child's final props. Mark the slot with a note: *"slot defers to parent because [ChildComponent] props are not yet specced — switch to array prop once [reference] architecture is complete."* If the parent needs to control layout around the list items (e.g., gap, separator), spec the slot with structural wrapping guidance. Only use a guessed array prop if the child's behavioral description in the referenced analysis makes the props obvious and stable.
+**When the child component's interface is unknown (cross-plan dependency):** If the child is planned in another analysis with no architecture spec yet, prefer a **slot** over an array prop. A slot defers the interface decision to the parent (Section/Block wrapper), which will know the child's final props. Mark the slot with a note: *"slot defers to parent because [ChildComponent] props are not yet specced — switch to array prop once [reference] architecture is complete."* If the parent needs to control layout around the list items (e.g., gap, separator), spec the slot with structural wrapping guidance. Only use a guessed array prop if the child's behavioral description in the referenced analysis makes the props obvious and stable.
 
 **Reuse child props types for composition:** When a parent composes a child 1:1 (e.g., `DeliveryGroup` contains one `DeliveryEstimate`), accept the child's props interface as a single prop rather than duplicating its fields. This keeps the parent's API in sync with the child and avoids field drift.
 

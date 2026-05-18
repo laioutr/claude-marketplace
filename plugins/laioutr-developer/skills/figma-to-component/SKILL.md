@@ -1,17 +1,17 @@
 ---
 name: figma-to-component
-description: Use when implementing Vue components from Figma designs or from a figma-design-analysis plan, when writing component code following Laioutr monorepo conventions, or when verifying implemented components against project standards.
+description: Use when implementing Vue components from a figma-design-analysis plan, from a figma-component-architecture spec, or directly from Figma designs, when writing component code following Laioutr conventions, or when verifying implemented components against project standards. Step 3 of the Laioutr Figma → component pipeline.
 ---
 
 # Figma to Component
 
 ## Overview
 
-Implement Vue components for the Laioutr monorepo following project conventions. Works in two modes:
+Implement Vue components following Laioutr conventions. Works in two modes:
 1. **From a plan** -- Receives a plan from `figma-design-analysis` and implements one component at a time
 2. **Standalone** -- For simple single-component designs, performs lightweight analysis + implementation in one pass
 
-**REQUIRED SUB-SKILL for complex designs:** Use `figma-design-analysis` first to produce a plan.
+**REQUIRED upstream skills for complex designs:** Run `figma-design-analysis` first to produce a structural plan, then `figma-component-architecture` to spec props/slots/events/state. This skill consumes both outputs. For trivial single-component designs (banner, card, hero), this skill performs lightweight analysis inline and you can skip both — see "Quick Analysis (standalone mode only)" below.
 
 ## When to Use
 
@@ -51,15 +51,24 @@ digraph figma_implement {
 
 ## Quick Analysis (standalone mode only)
 
-For simple single-component designs, perform lightweight analysis before implementing:
+Standalone mode is for **one** new presentational component implemented in **one** package. Use it only when **every** condition holds:
+
+- The design is a single Figma component frame, not a page or page section.
+- Implementation produces exactly one new `.vue` file (referencing existing `@laioutr-core/ui-kit` / `@laioutr-core/ui` children is fine — creating new children is not).
+- No compound state sharing (no `createContext`, no `v-model` between parent and a deep child).
+- API surface is small: roughly ≤4 props, ≤2 slots, ≤1 event.
+
+If **any** condition fails, STOP and run the full pipeline: `figma-design-analysis` → `figma-component-architecture` → return here. The most common trip-wires are the second condition (the design has child components that don't exist yet) and the fourth (some pieces are atomic, others are commerce-specific).
+
+### Quick analysis steps
+
+When all conditions hold, perform lightweight analysis before implementing:
 
 1. `get_design_context` with `clientLanguages: "typescript,vue"` and `clientFrameworks: "vue,nuxt"`
 2. `get_variable_defs` for token definitions
 3. Extract variant matrix (each Figma axis -> prop, breakpoints -> CSS media queries)
-4. Search for existing components: `grep -r "ComponentName" packages/ui-kit/src/ packages/ui/src/ packages/ui-app/src/`
-5. Decide package placement (see placement decision tree below)
-
-**If the design has 3+ visual groups, STOP and use `figma-design-analysis` instead.**
+4. Search for existing components: `grep -r "ComponentName" node_modules/@laioutr-core/ui-kit/src/ node_modules/@laioutr-core/ui/src/` (skip `ui-app` — it exports section/block helpers, not presentational components)
+5. Place the new component in your module's `src/runtime/components/<Name>/` (directory layout below)
 
 **If Figma MCP tools fail** (e.g., desktop app not open), ask the user to open the file in Figma desktop. Do not proceed to implementation without Figma data.
 
@@ -81,14 +90,30 @@ If step 4 reveals the component already exists, switch to **verification mode** 
 
 Full conversion rules are in the `figma-design-analysis` skill.
 
-### Package Placement
+### Where new components live
 
-| Package | Component Type | Examples | Directory |
-|---|---|---|---|
-| `ui-kit` | Atomic, reusable across contexts | Button, Card, Icon, Input, Dialog | `src/runtime/app/components/` |
-| `ui` component | Mid-level commerce compositions | DarkModeSwitch, RatingInput, SwatchItem | `src/runtime/components/<Name>/` |
-| `ui` organism | Complex page sections | Header, Footer, CartSheet, ProductGrid | `src/runtime/components/organism/<Name>/` |
-| `ui` legacy section | `defineSection()` page sections (global, no prefix) | CmsContainer, BrandHero | `src/runtime/components/<Name>/` |
+New presentational components go in your Nuxt module under `src/runtime/components/<Name>/`. No further categorization needed.
+
+Section/Block wrappers (`defineSection` / `defineBlock`) live separately at `src/runtime/app/section/` and `src/runtime/app/block/` — built by the `writing-section-block-definitions` skill, not here.
+
+## Before implementation: check for assets that need exporting
+
+Before writing any `.vue` referencing `<img>`, `<Media>`, `<NuxtImg>`, or a background-image CSS path, scan the design for image content that needs to land as files in `runtime/public/`:
+
+- **Custom illustrations** (hero artwork, empty-state graphics, onboarding scenes)
+- **Photographs** (lifestyle shots, product placeholders not coming from data)
+- **Partner / brand logos** (payment-method icons not in the theme set, integration badges)
+- **Custom map markers, pins, pattern fills, certification stamps**
+- **Screenshots** (component-picker previews, in-app demonstrations)
+
+If any of these appear, **invoke `figma-export-assets` before writing the component**. That skill owns the format/scale/destination/filename decisions and produces a structured export spec (it can't write image bytes itself; the spec is what gets handed off to the Figma File → Export step or the REST API).
+
+Skip the asset-export step only when **all** of these hold:
+- The component renders only icons from the existing `IconName` union exported by `@laioutr-core/ui-kit`
+- All raster content is theme-provided (`useTheme().image()` / `themeMedia()` / `themeResponsiveMedia()`) — already registered upstream
+- All raster content comes from props (e.g., `<Media :media="product.image" />`) — supplied by the consumer, not bundled with the component
+
+When unsure, invoke `figma-export-assets` — its Step 1 inventory will Early-Exit if nothing actually needs exporting.
 
 ## Implementation Conventions
 
@@ -413,6 +438,21 @@ When verifying an existing component AND Figma data is available from `get_desig
 
 If Figma data is unavailable (tool failure, no URL provided), skip this section and note it was skipped.
 
+## Next step: offer the section/block wrapper
+
+When implementation and verification are complete, the presentational component exists but cannot yet be placed in a page — it has no `defineSection` / `defineBlock` wrapper to bind it to data and surface it in Studio. Offer this as the next step.
+
+After reporting completion, ask the user explicitly:
+
+> *"The component is implemented and verified. Should I also write the `defineSection` / `defineBlock` wrapper so it can be used on pages? That's the `writing-section-block-definitions` skill."*
+
+Skip the offer only when:
+- The component is itself a section/block (already a `defineSection`/`defineBlock` definition — not a presentational primitive)
+- The user already stated the component is for direct composition in another component, not for Studio placement
+- A wrapper already exists (verified by searching the module's `src/runtime/app/section/` and `src/runtime/app/block/` for usages of the component)
+
+If the user accepts, invoke `writing-section-block-definitions`. The integration requirements section of the architecture spec (when present) is the brief for the wrapper.
+
 ## Common Mistakes
 
 | Mistake | Fix |
@@ -457,6 +497,9 @@ If Figma data is unavailable (tool failure, no URL provided), skip this section 
 
 ## Related skills
 
+The Laioutr Figma → component pipeline is: **figma-design-analysis → figma-component-architecture → figma-to-component → writing-section-block-definitions**. This skill is the third step.
+
+- `figma-design-analysis` — upstream. Produces the component hierarchy, token map, variant matrix, and placement plan this skill implements. Required for designs with 3+ components.
+- `figma-component-architecture` — upstream. Produces the props/slots/events/state spec this skill implements without making API design choices. Required when the plan has 3+ components.
 - `figma-export-assets` — run **before** wiring up `<img>` / `<Media>` references if the component needs a new raster/SVG file (illustration, partner logo, custom marker, CTA background). Owns the format/scale/destination/filename decisions and the export spec.
-- `figma-design-analysis` — upstream of this skill: produces the component hierarchy, token map, and placement plan that this skill implements.
-- `component-architecture` — bridges between the two when a plan needs an explicit props/slots/events spec before implementation starts.
+- `writing-section-block-definitions` — downstream. After this skill builds the presentational component, this skill writes the `defineSection` / `defineBlock` wrapper that maps canonical entities onto the component's props and exposes it to Studio. See "Next step: offer the section/block wrapper" above.

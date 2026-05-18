@@ -14,6 +14,8 @@ The Figma MCP requires the **Figma desktop app** to be open with the target docu
 
 From URL `https://www.figma.com/design/:fileKey/:fileName?node-id=75-37105`, the node ID is `75:37105` (replace `-` with `:`).
 
+**Validate the resolved node before deep-exploring it.** Call `get_metadata` on the node first; if the returned frame's name doesn't match the URL filename (e.g., URL says `Location-Finder` but the node is named "payment methods"), or if its dimensions are suspiciously small (<200px on both axes for what should be a page-level frame), the URL anchor points at a sub-instance rather than the design root. Call `get_metadata(0:0)` to list the file's top-level frames and pick the one that matches the URL's `fileName` slug. Don't waste exploration budget drilling into the wrong subtree.
+
 ## Exploration Strategy
 
 **For any design, start with `get_design_context`** -- it returns structured code-ready output with component hierarchy, styling, and variable references. Use `clientLanguages: "typescript,vue"` and `clientFrameworks: "vue,nuxt"`.

@@ -109,19 +109,16 @@ When in doubt: if the text could plausibly be translated to another language for
 
 ## Step 4 — Choose the destination directory
 
-The asset lives in your module's `runtime/public/` (or `runtime/app/public/`), grouped by the role of the consuming component. See `[[three-layer-architecture]]` in `laioutr-platform` for the role definitions.
+The asset lives in your module's public directory. Pick the segment that matches where the consuming component lives in your module:
 
-| Consumer role | Public dir |
+| Consumer file location | Public dir |
 |---|---|
-| Atom-style primitive (ui-kit role) | `src/runtime/app/public/` |
-| Commerce composition (ui role) | `src/runtime/public/` ← no `app/` segment |
-| Section / Block (ui-app role) | `src/runtime/app/public/` |
+| `src/runtime/components/...` (presentational component) | `src/runtime/public/` |
+| `src/runtime/app/section/...` or `src/runtime/app/block/...` (Section/Block wrapper) | `src/runtime/app/public/` |
 
-**Verify the segment.** The ui role uses `runtime/public/`, the others use `runtime/app/public/`. Run `ls src/runtime/` in your module if unsure — whichever segment exists is the one to use.
+Run `ls src/runtime/` and `ls src/runtime/app/` in your module if unsure — whichever segment exists with a `public/` subdirectory is the one to use. If the asset is consumed by both presentational components and Section/Block wrappers, place it under the higher-level path (`src/runtime/public/`) where both can reference it.
 
-If the asset has more than one likely consumer across roles, place it under the lowest-level role they share (usually the ui-kit role) and reference it from there.
-
-**Production assets vs. Storybook-only fixtures.** Assets that ship with the component (default content, theme images, component previews, real consumer-facing artwork) go in your module's `runtime/public/` (or `runtime/app/public/`) so they're served at runtime. Assets that exist *only* as Storybook story fixtures (e.g. demo payment-logo placeholders that show up only inside `.stories.ts`, never used by the component itself) can live in your local Storybook's public dir instead (`.storybook/public/<feature>/` or `playground/.storybook/public/<feature>/`, depending on your setup) — that path is served only inside the Storybook dev server and is not published with the module. When in doubt, prefer `runtime/public/` — if the component ever needs a default value pointing at the asset, it must be runtime-served.
+**Production assets vs. Storybook-only fixtures.** Assets that ship with the component (default content, theme images, component previews, real consumer-facing artwork) go in your module's `runtime/public/` (or `runtime/app/public/`) so they're served at runtime. Assets that exist *only* as Storybook story fixtures (e.g. demo payment-logo placeholders that show up only inside `.stories.ts`, never used by the component itself) can live in your local Storybook's public dir instead (`.storybook/public/<feature>/`) — that path is served only inside the Storybook dev server and is not published with the module. When in doubt, prefer `runtime/public/` — if the component ever needs a default value pointing at the asset, it must be runtime-served.
 
 ## Step 5 — Choose the path inside `public/`
 
@@ -129,12 +126,12 @@ Group by feature/component, not by format. The leading `/` in the runtime URL ma
 
 | Pattern | Used for | Example |
 |---|---|---|
-| `/<feature>/<filename>` (ui) | Per-component or per-feature directory | `/cta/cta-banner-bg.png`, `/brand-hero/brand-header-light-desktop-laioutr.svg` |
-| `/img/<feature>/<filename>` (ui-kit) | ui-kit-role assets grouped under `img/` | `/img/banner/showcase-laioutr-light-desktop.svg`, `/img/placeholder/1x1-product.png` |
-| `/app-ui/component-previews/<ComponentName>.png` (ui-app) | Studio component-picker preview screenshots | `/app-ui/component-previews/SectionFooter.png` |
-| `/<feature>/<filename>` (ui-app) | Per-section / per-block feature directory for assets that are not previews | `/awards/holidaycheck-2026-award.png`, `/hero/background-desktop.jpg` |
-| `/placeholders/<aspect>.{jpg,png,svg}` (ui) | Fixture placeholders for stories | `/placeholders/16x9.jpg`, `/placeholders/1x1.svg` |
-| `/logo/<filename>` (ui) | Brand/partner logos | `/logo/logo-light.svg` |
+| `/<feature>/<filename>` | Per-component or per-feature directory under a presentational component's `public/` | `/cta/cta-banner-bg.png`, `/brand-hero/brand-header-light-desktop-laioutr.svg` |
+| `/img/<feature>/<filename>` | Generic image library grouped under `img/` (mirrors upstream `@laioutr-core/ui-kit`'s convention) | `/img/banner/showcase-laioutr-light-desktop.svg`, `/img/placeholder/1x1-product.png` |
+| `/app-ui/component-previews/<ComponentName>.png` | Studio component-picker preview screenshots under `src/runtime/app/public/` | `/app-ui/component-previews/SectionFooter.png` |
+| `/<feature>/<filename>` (under `src/runtime/app/public/`) | Per-section / per-block feature directory for assets that are not previews | `/awards/holidaycheck-2026-award.png`, `/hero/background-desktop.jpg` |
+| `/placeholders/<aspect>.{jpg,png,svg}` | Fixture placeholders for stories | `/placeholders/16x9.jpg`, `/placeholders/1x1.svg` |
+| `/logo/<filename>` | Brand/partner logos | `/logo/logo-light.svg` |
 
 ## Step 6 — Choose the filename
 

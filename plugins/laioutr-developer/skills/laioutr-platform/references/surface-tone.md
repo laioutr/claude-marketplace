@@ -62,7 +62,7 @@ If the component only needs `color`, `fill`, `stroke`, etc. for its text and ico
 }
 ```
 
-**Nothing to opt into.** The cascade does the work. Most text/icon-rendering atoms in `ui-kit` should be Tier 1.
+**Nothing to opt into.** The cascade does the work. Most text/icon-rendering atoms (whether in upstream `@laioutr-core/ui-kit` or in your own module) should be Tier 1.
 
 ### Tier 2: Descendant selectors on `.on-{tone}` (preferred when Tier 1 isn't enough)
 
@@ -88,7 +88,7 @@ Reach for the composable only when the tone affects **non-styling decisions**:
 
 - Choosing between visually different icon SVGs
 - Picking a different image source
-- Selecting a named ui-kit variant (`Button` choosing `'ghost-white'` vs `'ghost-black'` — class name differs, not just CSS within one class)
+- Selecting a named upstream component variant (`Button` choosing `'ghost-white'` vs `'ghost-black'` — class name differs, not just CSS within one class)
 - Conditional sub-component rendering
 
 When you do this, accept `surfaceTone?` as a prop AND use `useSurfaceTone(props)` — the composable already implements precedence (explicit prop > context > `'light'`).

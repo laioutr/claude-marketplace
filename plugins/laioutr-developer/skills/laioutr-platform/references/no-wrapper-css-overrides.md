@@ -81,7 +81,7 @@ defineProps<{
 3. **Move the CSS into the child.** The override rules now live under the modifier selector in the child's own `<style>` block, using the same tokens and layer as the rest of the child's styles.
 4. **Update the wrapper to pass the prop.** Delete the override CSS and — if the wrapper div existed only as a CSS scope anchor — delete the wrapper div too.
 5. **Add a Storybook story** for the new variant in the child's stories file so the variant is visible and visually regressed.
-6. **Add changesets** for every package whose exports change as a result.
+6. **Bump your module's version and update the changelog** if the new prop/variant changes what consumers can rely on.
 
 ## Exceptions
 

@@ -12,10 +12,10 @@ layer-specific across `ui-kit`, `ui`, `ui-app`), 1 MCP server config.
 | Source path | Plugin path | Action | Notes |
 | --- | --- | --- | --- |
 | `skills/adr/` | `skills/adr/` | copied | Generic ADR writing |
-| `skills/component-architecture/` | `skills/component-architecture/` | copied | Still contains `packages/ui-kit/...` paths in grep examples (see Open work below) |
+| `skills/component-architecture/` | `skills/figma-component-architecture/` | copied + renamed | Renamed to make pipeline position legible (step 2 of figma-design-analysis → figma-component-architecture → figma-to-component → writing-section-block-definitions). Still contains `packages/ui-kit/...` paths in grep examples (see Open work below) |
 | `skills/figma-design-analysis/` | `skills/figma-design-analysis/` | copied | `COCKPIT-99` / `LUI-123` Jira keys generalized to `PROJECT-123` / `TEAM-456`. Still contains heavy `packages/ui-kit/`, `packages/ui/`, `packages/ui-app/` path usage. A `## Related skills` footer points at `figma-export-assets` and `figma-to-component`; the "Themable Default Images" section gained a one-line callout naming `figma-export-assets` as the non-themable image lane |
 | `skills/figma-export-assets/` | `skills/figma-export-assets/` | copied + rewritten | Sourced from `~/.claude/skills/figma-export-assets/`. Monorepo paths rewritten for external devs: Step 4 destination table collapsed to "Consumer role / Public dir" (no `packages/<x>/` column), Step 5 path-pattern table re-labeled by role, Step 7 export-spec example uses `<module-root>/src/runtime/public/...` instead of `/Users/sl/src/laioutr/packages/ui/...`, verify commands use `src/runtime/public/...`, `IconName` references point at `@laioutr-core/ui-kit` instead of `packages/ui-kit/src/runtime/app/types/theme.ts`, "Cockpit component-picker" → "Studio component-picker", and the "new SVG to ui-kit" mistake fix gained an explicit reference to the four-step resolution ladder. Cross-references `figma-design-analysis` and `figma-to-component`, both present in the plugin; backlinks added in both directions |
-| `skills/figma-to-component/` | `skills/figma-to-component/` | copied | Line 172 reka-ui internal cross-ref replaced with an inline summary of the data-attribute pattern and a link to reka-ui's public docs. A `## Related skills` footer points at `figma-export-assets`, `figma-design-analysis`, and `component-architecture` |
+| `skills/figma-to-component/` | `skills/figma-to-component/` | copied | Line 172 reka-ui internal cross-ref replaced with an inline summary of the data-attribute pattern and a link to reka-ui's public docs. A `## Related skills` footer points at `figma-export-assets`, `figma-design-analysis`, `figma-component-architecture`, and `writing-section-block-definitions` |
 | `skills/changeset/` | — | **excluded** | Removed in trimming pass (monorepo-internal release workflow) |
 | `skills/discoveryjs/` | — | **excluded** | Removed in trimming pass |
 | `skills/json-yaml-tools.md` | — | **excluded** | Removed in trimming pass |
@@ -139,12 +139,18 @@ review — they should be updated before the plugin is shipped publicly.
 SRC=/path/to/laioutr/.claude
 DST=/path/to/claude-plugin-developer
 
-# Skills
-for s in adr changeset component-architecture figma-design-analysis \
-         figma-to-component writing-section-block-migration-manifest \
-         discoveryjs; do
+# Skills (same-name copies)
+for s in adr changeset figma-design-analysis figma-to-component \
+         writing-section-block-migration-manifest discoveryjs; do
   rm -rf "$DST/skills/$s" && cp -r "$SRC/skills/$s" "$DST/skills/"
 done
+# component-architecture is renamed to figma-component-architecture in this plugin
+rm -rf "$DST/skills/figma-component-architecture" \
+  && cp -r "$SRC/skills/component-architecture" "$DST/skills/figma-component-architecture"
+# After copy, update the `name:` frontmatter and pipeline-position strings to
+# match the renamed skill — search for `component-architecture` and rewrite to
+# `figma-component-architecture` except in the output filename suffix
+# `<topic>-component-architecture.md`, which is the document type, not the skill.
 cp "$SRC/skills/json-yaml-tools.md" "$DST/skills/json-yaml-tools/SKILL.md"
 
 # Agents
@@ -218,7 +224,7 @@ convention.
 | File | Line(s) | Reference | Severity |
 | --- | --- | --- | --- |
 | `skills/adr/SKILL.md` | 15, 110, 112, 132 | `docs/adr/records/NNNN-slug.md`, `docs/plans/YYYY-MM-DD-*.md` | low — a documented convention, useful as a default |
-| `skills/component-architecture/SKILL.md` | 528 | `docs/plans/YYYY-MM-DD-<topic>-component-architecture.md` | low — convention |
+| `skills/figma-component-architecture/SKILL.md` | 189 | `docs/plans/YYYY-MM-DD-<topic>-component-architecture.md` | low — convention; filename suffix is the document type, intentionally stable across the skill rename |
 | `rules/surface-tone.md` | 13, 205 | `docs/plans/2026-05-07-surface-tone-refactor/` (a specific internal plan folder) | medium — this is a literal internal path |
 
 **Recommendation:** D-low items can stay as suggested conventions. The
@@ -235,7 +241,7 @@ file-location guidance.
 | --- | --- | --- |
 | `skills/figma-design-analysis/SKILL.md` | 302, 305, 317, 320, 373, 399, 413–425, 477, 480, 496–505, 627–635, 773–793 | Heavy use of `packages/ui-kit/`, `packages/ui/`, `packages/ui-app/`, `packages/ui-tokens/` paths |
 | `skills/figma-to-component/SKILL.md` | 59, 426 | Uses `packages/...` paths and `#ui-kit/components/...` aliases |
-| `skills/component-architecture/SKILL.md` | 283, 286, 290 | `grep packages/ui-kit/...` examples |
+| `skills/figma-component-architecture/SKILL.md` | grep examples in core-constraints reference | `grep packages/ui-kit/...` examples |
 | `rules/surface-tone.md` | 3, 24, 166 | References `packages/ui-kit/`, `packages/ui/`, `packages/ui-app/` |
 | `rules/unique-component-names.md` | 3, 11 | Same |
 
@@ -261,7 +267,7 @@ surfaces. They are likely fine to keep.
 | --- | --- | --- | --- |
 | `rules/surface-tone.md` | 192 | `Studio` (Laioutr CMS authoring environment) | keep — Studio is the customer-facing authoring surface |
 | `rules/vue-sfc-cross-package-props.md` | 38 | `Studio schemas` | keep |
-| `skills/component-architecture/*` | various | `orchestr`, `frontend-core`, `@laioutr-app/*`, `@laioutr-core/canonical-types`, `@laioutr-core/core-types` | keep — these are public packages and core platform concepts |
+| `skills/figma-component-architecture/*` | various | `orchestr`, `frontend-core`, `@laioutr-app/*`, `@laioutr-core/canonical-types`, `@laioutr-core/core-types` | keep — these are public packages and core platform concepts |
 | `skills/figma-design-analysis/SKILL.md` | 246, 487 | Orchestr handlers as data source | keep — relevant for external devs |
 
 No Cockpit-specific code references were found in the kept skills or
@@ -273,7 +279,7 @@ mentions are example Jira keys (see Section C).
 
 | # | Action | Status |
 | --- | --- | --- |
-| 1 | **Section E** — rewrite `packages/...` paths to layer references in **rules** | ✅ done in rules; **still pending** in `skills/figma-design-analysis/SKILL.md` (~25 lines) and `skills/component-architecture/SKILL.md` (lines 283, 286, 290) — these are the most invasive skills and were left untouched pending decision |
+| 1 | **Section E** — rewrite `packages/...` paths to layer references in **rules** | ✅ done in rules; **still pending** in `skills/figma-design-analysis/SKILL.md` (~25 lines) and `skills/figma-component-architecture/SKILL.md` (grep examples in core-constraints reference) — these are the most invasive skills and were left untouched pending decision |
 | 2 | **Section A** — six broken cross-references to monorepo-local `.claude/rules/*` files | ✅ all six resolved (5 in rules, 1 in `figma-to-component/SKILL.md` line 172) |
 | 3 | **Section C** — Jira-key examples | ✅ done (`COCKPIT-99` → `PROJECT-123`, `LUI-123` → `TEAM-456`) |
 | 4 | **Section B-high** — `@laioutr-private/component-schema-diff` refs in `writing-section-block-migration-manifest` | ❌ not yet — skill needs either a public tool equivalent, or the concrete commands rewritten as abstract input/output descriptions |
@@ -282,7 +288,7 @@ mentions are example Jira keys (see Section C).
 ## Open work
 
 The skill bodies (`figma-design-analysis`, `figma-to-component`,
-`component-architecture`, `writing-section-block-migration-manifest`)
+`figma-component-architecture`, `writing-section-block-migration-manifest`)
 still contain monorepo-internal `packages/...` paths used as concrete
 file locations in `grep` examples and architectural placement guides.
 Rewriting these requires the same rephrasing pattern applied to the
@@ -435,7 +441,7 @@ the content will be invisible to Claude.
 Open items deliberately deferred:
 
 - **Oversize `SKILL.md` bodies**: `skills/figma-design-analysis/SKILL.md`
-  (~824 lines) and `skills/component-architecture/SKILL.md` (~640
+  (~824 lines) and `skills/figma-component-architecture/SKILL.md` (~640
   lines) are over the 500-line working ceiling cited by Anthropic's
   skill-authoring guidance. Body should be split into sibling
   `reference/*.md` files at one level of depth. Not yet done.
@@ -500,7 +506,7 @@ Final shape:
   `writing-section-block-definitions`) — the second carries its own
   `references/` with 6 deep-detail files.
 - 5 workflow skills carried over from the monorepo (`adr`,
-  `component-architecture`, `figma-design-analysis`,
+  `figma-component-architecture`, `figma-design-analysis`,
   `figma-to-component`, `writing-claude-rules`).
 
 Net `references/` count: **25 + 6 = 31 deep-detail files + 1
@@ -513,3 +519,71 @@ section/block-definition rules go under
 `writing-section-block-definitions/references/` (no `ui-app-` prefix);
 the storybook conventions get folded into `writing-storybook-stories/SKILL.md`
 directly (no separate reference file).
+
+## Audit pass: external-author framing (2026-05-18)
+
+A second parallel-subagent audit (this time targeting the Figma triad and
+the platform references against the actual external-app-developer mental
+model) surfaced two classes of residual monorepo framing:
+
+**A. Layer categorization applied to author-side work.** Several SKILL
+bodies framed the scope as *"components for `@laioutr-core/ui-kit` and
+`@laioutr-core/ui`"* — language that reads correctly for an internal
+contributor (who picks an internal package) but is wrong for an external
+app developer (who writes everything in their own Nuxt module and
+doesn't categorize new components by upstream-layer). The ui-kit /
+ui / ui-app distinction is meaningful for *consuming* upstream
+packages — atomic primitives live in `ui-kit`, commerce organisms live
+in `ui` — but external devs writing new components don't apply that
+split. Fixed across:
+
+- `figma-design-analysis/SKILL.md` — scope statement, self-critique
+  question, placement common-mistake rows, ui-app common-mistake rows
+- `figma-design-analysis/references/component-matching-and-placement.md`
+  — *"Package Placement"* section renamed to *"Scope: presentational
+  components only"*; placement decision tree reframed as in-scope-vs-out-of-scope;
+  placement table replaced with a *"where the existing component lives"*
+  table; hierarchy mapping reframed
+- `figma-design-analysis/references/plan-output-template.md` — dropped
+  `(@laioutr-core/ui-kit)` / `(@laioutr-core/ui)` annotations from
+  the example hierarchy; existing imports surface via `EXISTS at` paths
+- `figma-component-architecture/SKILL.md` — scope statement, ui-app
+  references, common-mistake rows
+- `figma-component-architecture/references/core-constraints.md` —
+  *"Why this separation matters"*, data-flow diagram clusters,
+  forbidden-dependencies framing, link-resolution boundary
+- `figma-component-architecture/references/spec-format.md` — multi-state
+  transition note, list-item type guidance
+- `figma-component-architecture/references/output-template.md` —
+  Integration Requirements section header
+- `figma-to-component/SKILL.md` — description, overview, quick-analysis
+  "fits in one package" condition dropped, *"Package Placement"* section
+  replaced with *"Where new components live"*, Next-step offer
+
+**B. Surgical line-level fixes in `laioutr-platform/references/`:**
+
+- `ui-kit-css-first-responsive.md` — `useBreakpoints()` / `useIsMobile()`
+  reframed as `@laioutr-core/ui-kit` exports via `#ui-kit/composables`
+  rather than an editable `composables/useBreakpoints.ts` file; the
+  *"this is the TODO and is the proper fix"* prescription rewritten
+  as a long-term upstream change (file an issue or fork); broken
+  cross-ref `styling.md` → `ui-kit-styling.md`
+- `parent-prefix-naming.md` — broken cross-ref `rules/unique-component-names.md`
+  → relative `./unique-component-names.md`
+- `public-css-api.md` — broken cross-ref `./storybook-stories.md` removed
+  (storybook guidance now lives in the sibling `writing-storybook-stories`
+  skill)
+- `vue-script-imports-single-block.md` — `ProductSlider.vue` "canonical
+  example" replaced with a generic statement; *"extremely rare in this
+  repo"* → *"extremely rare in practice"*
+- `writing-section-block-definitions/references/schema-field-if.md` —
+  `@laioutr/expression` namespace references rewritten as conceptual
+  descriptions of the expression engine's default + array + type bundles
+- `figma-component-architecture/SKILL.md` L189 — `docs/plans/...` output
+  path softened from a prescriptive default to a documented convention
+
+**C. Re-evaluated, no edit needed:** `subagent-orchestration.md`'s
+`node_modules/@laioutr-core/.../src/runtime/...` search paths and
+`figma-component-architecture/SKILL.md`'s Phase 1 `grep` examples
+against the same — these are discovery searches against installed
+packages, correct for external devs.

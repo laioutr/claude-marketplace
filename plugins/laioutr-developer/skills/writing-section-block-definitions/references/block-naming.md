@@ -1,6 +1,6 @@
 # Block Naming
 
-Naming convention for `Block*.vue` components in your module's ui-app-layer (typically `src/runtime/app/block/`, plus any section-colocated blocks).
+Naming convention for `Block*.vue` components in your module (typically `src/runtime/app/block/`, plus any section-colocated blocks).
 
 ## The rule
 

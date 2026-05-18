@@ -9,9 +9,9 @@ description: Use when analyzing Figma designs before implementation, when decomp
 
 Analyze Figma designs to produce structured implementation plans through an interactive process. Explores designs via the Figma MCP, gathers requirements interactively, maps tokens, matches existing components, decides package placement, presents findings section-by-section for approval, and challenges its own decisions before finalizing.
 
-**Scope boundary:** This skill plans components for `@laioutr-core/ui-kit` and `@laioutr-core/ui` only — standalone, data-agnostic, composable design system components. It does NOT plan `ui-app` sections/blocks, data integration, page components, page layouts, or Nuxt routing. Every component is self-contained: it accepts props, emits events, and can be composed into other components or wrapped by a ui-app Section/Block for data binding.
+**Scope boundary:** This skill plans **presentational components** — standalone, data-agnostic, composable pieces that receive data via props and emit events. Matches against upstream are searched in `@laioutr-core/ui-kit` (atomic primitives) and `@laioutr-core/ui` (commerce organisms); new components you'll author live in your own Nuxt module's `src/runtime/components/` without any layer categorization. This skill does NOT plan section/block wrappers, data integration, page components, page layouts, or Nuxt routing — Section/Block wrappers (which bind components to Studio and to data) are the `writing-section-block-definitions` skill's territory.
 
-Output can be executed by `figma-to-component` or `superpowers:executing-plans`.
+Output feeds `figma-component-architecture` (for plans with 3+ components, to spec props/slots/events/state) and then `figma-to-component` for implementation. For trivial single-component plans, `figma-to-component` can consume the analysis directly.
 
 ## When to Use
 
@@ -20,7 +20,7 @@ Output can be executed by `figma-to-component` or `superpowers:executing-plans`.
 - Creating implementation plans for designs with 3+ components
 - Auditing an existing component against its Figma design
 
-**For simple single-component implementations**, use `figma-to-component` directly -- it includes lightweight analysis.
+**For simple single-component implementations**, use `figma-to-component` directly — it includes lightweight analysis in its "Quick Analysis (standalone mode only)" section, which lists the exact conditions for skipping this skill (one new `.vue` file, no new child components, no compound state, single package, small API).
 
 ## Process Flowchart
 
@@ -118,7 +118,7 @@ Before writing the final document, challenge the plan in two ways.
 
 **Self-Critique** — Present 3-5 numbered challenges questioning your own decisions:
 - Component consolidation: "Should this NEW component share logic with an existing one?"
-- Package placement: "Should some of these be in `@laioutr-core/ui-kit` instead of `@laioutr-core/ui`?"
+- Granularity: "Is this NEW component too domain-specific? Could a more generic primitive cover it?"
 - REUSE vs NEW: "Could the existing Accordion be extended instead of creating a new one?"
 
 **Unresolved Gaps** — Surface questions the Figma design doesn't answer:
@@ -170,10 +170,10 @@ Explain briefly: *"I'll compress this, but I need one question answered first �
 
 | Mistake | Fix |
 |---|---|
-| Not checking for existing components | Always search `@laioutr-core/ui-kit` (73), `@laioutr-core/ui` (140), and `@laioutr-core/ui-app` sections/blocks first |
+| Not checking for existing components | Always search the upstream `@laioutr-core/ui-kit` (atomic primitives) and `@laioutr-core/ui` (commerce organisms) source (via `node_modules/`) first |
 | One component per Figma variant | One component with props -- variants are CSS modifiers |
 | Creating a Figma breakpoint prop | Breakpoints are CSS media queries, not props |
-| Putting commerce components in ui-kit | Commerce-specific -> `@laioutr-core/ui`; atomic/generic -> `@laioutr-core/ui-kit` |
+| Authoring a new generic primitive when an upstream one exists | Search upstream `@laioutr-core/ui-kit` for atomic primitives and `@laioutr-core/ui` for commerce organisms before proposing NEW |
 | Assuming Figma breakpoint count = implementation count | Figma shows all widths; implementation collapses adjacent identical breakpoints |
 | Incomplete hardcoded config maps (missing themes) | Always verify maps against `ls node_modules/@laioutr-core/ui-kit/src/runtime/app/theme/` |
 | Dead injection keys in types.ts | Verify `provide()`/`inject()` calls exist; remove unused symbols |
@@ -181,7 +181,7 @@ Explain briefly: *"I'll compress this, but I need one question answered first �
 | No implementation order in plan | Always specify leaf-first order with rationale |
 | Plan without issues section | Always run cross-file verification on existing components |
 | Proposing NEW when REUSE is viable | Before creating a new component, evaluate if an existing one can be extended |
-| Specifying exact props/slots for modifications | Describe modification intent at high level; leave API design to component-architecture skill |
+| Specifying exact props/slots for modifications | Describe modification intent at high level; leave API design to figma-component-architecture skill |
 | Dumping entire plan without checkpoints | Present section-by-section in Phase 4; get user approval before continuing |
 | Not challenging own decisions | Run self-critique in Phase 5 before finalizing |
 | Ignoring Jira ticket references | Scan Figma descriptions for ticket refs; fetch via Jira MCP |
@@ -198,12 +198,12 @@ Explain briefly: *"I'll compress this, but I need one question answered first �
 | Instance name ≠ definition name causing missed matches | Instance names may differ from definition names (e.g., "totals" vs "totals box"). Use `get_design_context` on the instance to find the linked source node ID when names don't match |
 | Skipping requirements gathering | Ask scope/constraint/priority questions in Phase 2 unless already answered |
 | Skipping all phases because user said "just give me the plan" | Compress to acceleration mode (see Phase Priority); never skip Phase 2 entirely |
-| Planning ui-app sections/blocks or data integration | This skill plans `@laioutr-core/ui-kit` and `@laioutr-core/ui` components only; data binding is out of scope |
-| Components that fetch data or call APIs directly | Components must be props-in/events-out; data integration belongs in `@laioutr-core/ui-app` |
+| Planning Section/Block wrappers or data integration | This skill plans presentational components only; data binding and Studio wiring live in `defineSection` / `defineBlock` — that's the `writing-section-block-definitions` skill |
+| Components that fetch data or call APIs directly | Components must be props-in/events-out; data integration belongs in the Section/Block wrapper |
 | Planning page components, layouts, or Nuxt routing | Out of scope; top-level output is a composable organism, not a page |
 | Assuming every file has a single "component library" page | Files may use per-component canvas pages (Footer, Navigation, Newsletter) or have no local definitions at all. Classify the file structure first (see step 1 of Discovering Component Definitions) |
 | Treating `/`-separated instance names as opaque strings | Parse as `category / component-name / variant` — match on the component-name segment, not the full path |
-| Producing an empty plan when all components already exist | Use the Early Exit path — present the hierarchy as confirmation/audit and suggest next steps at the ui-app layer |
+| Producing an empty plan when all components already exist | Use the Early Exit path — present the hierarchy as confirmation/audit and suggest next steps in the Section/Block wrapper |
 | Discarding successful MCP data when later calls fail | Work with partial data from earlier successful calls. Note which nodes could not be explored and ask the user to re-focus Figma |
 | Treating themable images as plain image props | Decorative backgrounds, placeholders, and empty states are theme-provided — note as `themeMedia()` / `themeResponsiveMedia()` usage, map to `ImageName` keys, and follow the `Default/Dark/Bright` naming convention if the component uses `OnBackground` |
 | Skipping `data-development-annotations` in `get_design_context` output | Each value is a designer-authored note — about optionality, interaction, routing, package placement, or cross-component contracts. Extract every one verbatim with `data-node-id` and `data-name`. For file-form responses, use `jq -r '.[].text' file \| grep -B 2 -A 10 'data-development-annotations='` |
@@ -211,7 +211,26 @@ Explain briefly: *"I'll compress this, but I need one question answered first �
 | Calling `get_design_context` only at section level | Section-level calls return sparse metadata WITHOUT annotations. Annotations only appear in leaf-level (or near-leaf) calls that return full code. Drill down into each meaningful subgroup |
 | Folding designer annotations into "Non-obvious" italic notes | Verbatim designer notes and inferred behavioral notes serve different purposes — reviewers must be able to tell them apart. Use `_Designer note (<node-id> <name>): "<verbatim>"_` for annotations and `_Non-obvious: ..._` for inference |
 
+## Next step: invoke figma-component-architecture
+
+When the final document is written and the user has confirmed it, the plan describes **what** to build (hierarchy, tokens, REUSE-vs-NEW, modification intent) but not **how the components' APIs look** (props, slots, events, state, composition patterns). For any plan with 3+ NEW or REUSE components, that API design happens in `figma-component-architecture` before `figma-to-component` starts writing code.
+
+After delivering the plan, say to the user:
+
+> *"The plan is written. Should I invoke `figma-component-architecture` next to spec props/slots/events/state for the NEW and REUSE components? That's the step that produces the architecture document `figma-to-component` reads when implementing."*
+
+Skip the offer only when:
+- The plan has zero NEW components and zero REUSE-with-modification components (Early Exit path — nothing to spec)
+- The plan is a single trivial component (`figma-to-component` standalone mode handles it inline)
+- The user explicitly states they'll write the architecture spec themselves or skip to implementation
+
+If the user accepts, invoke `figma-component-architecture`. The plan document is its input; it will read existing component APIs, run interactive architecture decisions, and produce the spec.
+
 ## Related skills
 
+The Laioutr Figma → component pipeline is: **figma-design-analysis → figma-component-architecture → figma-to-component → writing-section-block-definitions**. This skill is the first step.
+
+- `figma-component-architecture` — the next step for plans with 3+ components. Takes this skill's structural plan (hierarchy, tokens, variant matrix, placement) and produces a props/slots/events/state spec so `figma-to-component` can implement without making design choices. Skip for trivial single-component plans.
 - `figma-export-assets` — when the plan includes new raster/SVG assets that must land in `runtime/public/` (non-themable images, partner logos, custom markers, illustrations). Run it during implementation to produce the export spec.
-- `figma-to-component` — wiring up the components named by this skill's plan, once tokens, hierarchy, and placement are settled.
+- `figma-to-component` — wiring up the components named by this skill's plan, once tokens, hierarchy, placement, and (for complex plans) the architecture spec are settled.
+- `writing-section-block-definitions` — downstream of implementation: builds the `defineSection` / `defineBlock` wrapper that connects the presentational component to data. Out of scope for this skill, but reflected in the plan's Integration Requirements.

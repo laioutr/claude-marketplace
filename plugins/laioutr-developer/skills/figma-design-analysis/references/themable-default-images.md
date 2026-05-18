@@ -34,7 +34,7 @@ Even if the Figma file shows only one theme variant, any non-product, non-brand 
 | `themeMedia(path, w, h, color, ext, scales)` | Same image for all breakpoints | Single `MediaImage` |
 | `themeResponsiveMedia(path, mobileW, mobileH, desktopW, desktopH, color, ext, scales)` | Separate `{path}-mobile.{ext}` and `{path}-desktop.{ext}` | Single `MediaImage` with responsive sources |
 
-Images are registered per theme in `ImageSet` (exported by `@laioutr-core/ui-kit` from `types/theme.ts`). Each entry is a `MediaImage` or a `[MediaImage, MediaImage]` tuple for `[light, dark]` color modes.
+Images are registered per theme in `ImageSet` (defined by `@laioutr-core/ui-kit`). Each entry is a `MediaImage` or a `[MediaImage, MediaImage]` tuple for `[light, dark]` color modes. Upstream ships canonical keys (`placeholder1x1Product`, `emptyStateBox`, …). Your module registers additional keys (and overrides existing ones) by calling `extendTheme()` in its own theme module.
 
 ## Brightness-Based Naming Convention
 
@@ -59,13 +59,18 @@ Pass the result to `<Media :media="bg" />`.
 
 ## Theme Inheritance
 
-The base theme (`laioutr.ts`) must define all images. Child themes (`classic`, `sunny`, `tech`) only override images that differ from their parent via `extendTheme()`. When proposing new `ImageName` entries, the base theme needs the new key at minimum.
+Upstream themes form a chain: `@laioutr-core/ui-kit`'s base theme defines all canonical images, and child themes (`classic`, `sunny`, `tech`) override only what differs via `extendTheme()`. Your module typically defines its own theme on top of one of these via `extendTheme()` as well.
+
+When proposing new themable images:
+
+- **If the key is app-specific** (only your storefront needs it), register it in your module's own theme. `ImageName` includes `| (string & {})` for extensibility, so `theme.image('myCustomKey')` works without upstream changes. Document the contract in your theme's source.
+- **If the key is generic** (multiple Laioutr storefronts would want it), the canonical key needs to land in `@laioutr-core/ui-kit`'s `ImageName` type and base theme. You can't edit those directly — file an issue against `laioutr/ui-source` or open a PR there. In the meantime, register it locally as an app-specific key and revisit when upstream lands.
 
 ## In the Analysis Plan
 
-Note themable images as behavioral notes in the Component Hierarchy and map them to `ImageName` keys. If no existing `ImageName` matches, flag that a new entry needs to be added to the `ImageName` type and the base theme's `ImageSet`. (`ImageName` includes `| (string & {})` for extensibility, but explicit entries are still required — they provide IDE autocomplete and document the image contract.)
+Note themable images as behavioral notes in the Component Hierarchy and map them to `ImageName` keys. If no existing `ImageName` matches, flag whether the new key is app-specific (register in your module's theme) or generic (needs an upstream change — short-term workaround: register locally via the string-extension escape).
 
 ```markdown
-- **BannerHero** (@laioutr-core/ui, organism) -- NEW
+- **BannerHero** -- NEW
   - _Themable default image: background illustration varies by theme, breakpoint, and color mode (3 keys: Default/Dark/Bright). Uses themeResponsiveMedia()._
 ```

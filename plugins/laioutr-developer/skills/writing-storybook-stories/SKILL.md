@@ -99,7 +99,7 @@ export const Loading: Story = { args: { isLoading: true } };
 
 If the module supports multiple themes:
 
-- Check the Storybook preview config (typically `playground/.storybook/preview.ts`) to confirm which theme renders by default. The default may not be the same theme Figma was exported against — flag mismatches before authoring stories.
+- Check your module's Storybook preview config (typically `.storybook/preview.ts` at the module root) to confirm which theme renders by default. The default may not be the same theme Figma was exported against — flag mismatches before authoring stories.
 - For every component, verify that token-driven props (e.g. `colorScheme`) and CSS variable resolution work under every supported theme. Flag any token references that only work under one theme.
 
 If the module supports only one theme, ignore this section.
@@ -109,7 +109,7 @@ If the module supports only one theme, ignore this section.
 When you touch an existing `.stories.ts` as part of a component refactor:
 
 1. **Viewport check** — compare Figma frames for mobile / tablet / desktop against the actual breakpoints used in the component (Tailwind `sm:` / `md:` / `lg:` / `xl:` or token-driven equivalents). Flag any mismatches.
-2. **Rename, if requested** — touch all in one pass: folder name, file name (`.vue`), component name in `<script setup name="...">`, exports in `index.ts` and barrels, imports in any ui-app-layer Sections and Blocks, and any string references (`defineSection({ component: '...' })`, registries, schemas). Use LSP `findReferences` before any delete or rename — grep is a fallback.
+2. **Rename, if requested** — touch all in one pass: folder name, file name (`.vue`), component name in `<script setup name="...">`, exports in `index.ts` and barrels, imports in any Sections and Blocks, and any string references (`defineSection({ component: '...' })`, registries, schemas). Use LSP `findReferences` before any delete or rename — grep is a fallback.
 3. **Stories** — delete the old `*.stories.ts`, write new ones using the naming rules above.
 
 If the module is migrating off `dark` / `light`-mode props in favor of the `surface-tone` mechanism, also strip: `dark:` Tailwind classes, conditionals on `colorMode` / `isDarkMode`, CSS variables scoped to `.dark`, imports from `nuxt-color-mode` or similar, and props that exist only to toggle theme.

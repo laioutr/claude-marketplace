@@ -24,11 +24,11 @@ file in the `rules/` directory of their project (not into this plugin —
 the plugin ships read-only rules).
 
 For Laioutr-specific questions (Orchestr, sections/blocks, schema fields,
-ui-kit / ui / ui-app components), prefer the official Laioutr docs MCP
-server (`laioutr-docs`, registered in this plugin's `.mcp.json` at
-`https://docs.laioutr.io/mcp`) over guessing. For general Vue, Nuxt,
-TypeScript, Pinia, UnoCSS, Storybook, and Playwright questions, prefer
-Context7 MCP if available.
+upstream `@laioutr-core/ui-kit` / `ui` / `ui-app` components), prefer the
+official Laioutr docs MCP server (`laioutr-docs`, registered in this
+plugin's `.mcp.json` at `https://docs.laioutr.io/mcp`) over guessing.
+For general Vue, Nuxt, TypeScript, Pinia, UnoCSS, Storybook, and
+Playwright questions, prefer Context7 MCP if available.
 
 ## Laioutr Platform Overview
 
@@ -93,7 +93,7 @@ duplicate inline:
 
 ## Section Component Pattern
 
-Used in `ui-app` for configurable page sections:
+Used to register configurable page sections via `@laioutr-core/ui-app`:
 
 ```ts
 import { defineSection, definitionToProps } from '#frontend-core';
@@ -144,15 +144,11 @@ file listed below when its trigger matches the task at hand. The trigger
 after each `—` is the only signal you have; if a task plausibly matches,
 open the file before writing code.
 
-Group headings reflect the **role** the component your code touches plays
-(atom-style primitive, organism, section/block), not separate packages —
-your module is one package; see [`references/three-layer-architecture.md`](./references/three-layer-architecture.md).
-
 ### Architecture & discovery
 
-- [`references/three-layer-architecture.md`](./references/three-layer-architecture.md) — what `@laioutr-core/ui-kit` / `ui` / `ui-app` are, where your code goes, and the ladder when upstream is missing something (prop override → local component → fork from `laioutr/ui-source` → upstream issue)
+- [`references/three-layer-architecture.md`](./references/three-layer-architecture.md) — what `@laioutr-core/ui-kit` / `ui` / `ui-app` contain, where your code goes, and the ladder when upstream is missing something (prop override → local component → fork from `laioutr/ui-source` → upstream issue)
 
-### Cross-cutting (apply to any component your module ships)
+### Component conventions (apply to any component your module ships)
 
 - [`references/money-currency-code.md`](./references/money-currency-code.md) — handling Money objects, prices, or currency in code, stories, or fixtures
 - [`references/no-wrapper-css-overrides.md`](./references/no-wrapper-css-overrides.md) — before writing CSS in a parent that targets a child component's class names
@@ -160,7 +156,6 @@ your module is one package; see [`references/three-layer-architecture.md`](./ref
 - [`references/parent-prefix-naming.md`](./references/parent-prefix-naming.md) — naming a Vue component, especially before reaching for `<Parent><Part>` compound naming
 - [`references/public-css-api.md`](./references/public-css-api.md) — adding, renaming, or removing CSS class names exposed by any component you ship
 - [`references/story-icons-must-exist.md`](./references/story-icons-must-exist.md) — referencing an icon name in a `.stories.ts`
-- **`writing-storybook-stories` skill (sibling)** — writing or updating any `.stories.ts` file: meta titles, variant naming, no per-viewport exports, theming checks, refactor workflow. Auto-loads when the prompt mentions Storybook / stories / `.stories.ts`.
 - [`references/surface-tone.md`](./references/surface-tone.md) — implementing a container that paints a background (light/dark/bright), or text/icons whose contrast must adapt
 - [`references/typescript-refactoring.md`](./references/typescript-refactoring.md) — deleting or renaming a symbol, planning a migration, or doing reference lookups (use LSP, not grep)
 - [`references/unique-component-names.md`](./references/unique-component-names.md) — picking a basename for a new Vue component file in your module
@@ -168,29 +163,29 @@ your module is one package; see [`references/three-layer-architecture.md`](./ref
 - [`references/vue-script-imports-single-block.md`](./references/vue-script-imports-single-block.md) — adding `import` statements to a Vue SFC
 - [`references/vue-sfc-cross-package-props.md`](./references/vue-sfc-cross-package-props.md) — using `defineProps<T>()` with a type imported from another package, or hitting cross-package SFC build errors
 
-### Atom-style components (ui-kit role)
-
-Apply when your module ships a custom primitive — or a fork of an upstream `@laioutr-core/ui-kit` component.
+### Styling, theming, and CSS
 
 - [`references/ui-kit-styling.md`](./references/ui-kit-styling.md) — writing CSS or picking tokens
 - [`references/ui-kit-theming.md`](./references/ui-kit-theming.md) — themes, icons, translations, background-brightness
 - [`references/ui-kit-no-outer-chrome-in-primitives.md`](./references/ui-kit-no-outer-chrome-in-primitives.md) — adding margin/padding around a primitive, or a consumer asking to override outer spacing
 - [`references/ui-kit-css-first-responsive.md`](./references/ui-kit-css-first-responsive.md) — picking between CSS media queries and `useBreakpoints` / `useIsMobile`
+- [`references/ui-z-ordering.md`](./references/ui-z-ordering.md) — picking a z-index — use `--z-index-*` tokens, never raw values
+
+### Vue template and import patterns
+
 - [`references/ui-kit-vue-template-type-casts.md`](./references/ui-kit-vue-template-type-casts.md) — using `as T | U` inside a template binding (resolves `vue/no-deprecated-filter`)
 - [`references/ui-kit-todo-figma-marker.md`](./references/ui-kit-todo-figma-marker.md) — shipping a provisional design value before its Figma source-of-truth exists
+- [`references/ui-ui-kit-first.md`](./references/ui-ui-kit-first.md) — before writing more than ~3 lines of structural markup; search upstream `@laioutr-core/ui-kit` first
+
+### Reka-UI integration
+
 - [`references/ui-kit-reka-ui.md`](./references/ui-kit-reka-ui.md) — wrapping a reka-ui primitive; a11y or state-styling questions
 - [`references/reka-ui-wrapper-patterns.md`](./references/reka-ui-wrapper-patterns.md) — picking a wrapper pattern (split vs flat, as-child, Portal, typed props/emits) for a reka-ui primitive
 - [`references/reka-ui-no-type-leakage.md`](./references/reka-ui-no-type-leakage.md) — declaring public props/emits/slots on a reka-ui wrapper, or barrel-exporting types
 
-### Organism-style components (ui role)
+### Sibling skills
 
-Apply when your module ships a custom organism — or a fork of an upstream `@laioutr-core/ui` component.
+- **`writing-storybook-stories`** — auto-loads when the prompt mentions Storybook / stories / `.stories.ts`. Carries meta titles, variant naming, no per-viewport exports, theming checks, and the refactor workflow.
+- **`writing-section-block-definitions`** — auto-loads when the prompt mentions `defineSection`, `defineBlock`, `shared-fields/`, schema field types, or `Block*.vue` naming. Carries the sidebar-group order, canonical field names, forbidden-name list, `if` operators, factory literal-type discipline, and `defineSelectOptions` rules, plus six detailed reference files.
 
-- [`references/ui-ui-kit-first.md`](./references/ui-ui-kit-first.md) — before writing more than ~3 lines of structural markup; search upstream `@laioutr-core/ui-kit` first
-- [`references/ui-z-ordering.md`](./references/ui-z-ordering.md) — picking a z-index — use `--z-index-*` tokens, never raw values
-
-### Sections & Blocks (ui-app role)
-
-The full Sections & Blocks ruleset now lives in the sibling **`writing-section-block-definitions` skill** — it auto-loads when the prompt mentions `defineSection`, `defineBlock`, `shared-fields/`, schema field types, or `Block*.vue` naming. The skill carries the sidebar-group order, canonical field names, forbidden-name list, `if` operators, factory literal-type discipline, and `defineSelectOptions` rules, plus the six detailed reference files behind them.
-
-If you reach this section without that skill having loaded, name it explicitly in your prompt.
+If you're writing sections/blocks and the second skill hasn't loaded, name it explicitly in your prompt.

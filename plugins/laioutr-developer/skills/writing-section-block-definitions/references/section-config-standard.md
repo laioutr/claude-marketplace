@@ -1,10 +1,10 @@
 # Section & Block Config Standard
 
 Single source of truth for the configuration schema of every section and block
-your module contributes to the ui-app and ui layers. Governs **structure**
-only — sidebar group order, group names, option order within a group,
-canonical `name` + field type per concept. **Default values are explicitly
-out of scope** and remain as currently configured per section/block.
+your module defines. Governs **structure** only — sidebar group order,
+group names, option order within a group, canonical `name` + field type per
+concept. **Default values are explicitly out of scope** and remain as
+currently configured per section/block.
 
 > Conflict rule: when Figma Sections/Blocks pages disagree with the Widgets
 > page, the **Sections/Blocks pages are authoritative**. The Widgets page
