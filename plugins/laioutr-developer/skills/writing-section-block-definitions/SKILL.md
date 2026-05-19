@@ -1,6 +1,6 @@
 ---
 name: writing-section-block-definitions
-description: Use when authoring or modifying a `defineSection` / `defineBlock` schema in a Laioutr module — choosing sidebar group placement (Section info / Content / Design → Styling / Design → Layout / Rules), picking canonical field names (`heading`, `media`, `cta`, `background`, `margin`, `alignment`, …), avoiding forbidden bare field names (`style`, `class`, `name`, `key`, `id`, `slot`, `is`, `default`, `ref`), adding conditional visibility with `if`, naming a `Block*.vue` component, writing a factory function in `shared-fields/*.ts` that returns a field, or exporting a `*Options` array via `defineSelectOptions`.
+description: Use when authoring or modifying a `defineSection` / `defineBlock` schema in a Laioutr module — choosing sidebar group placement (Section info / Content / Design → Styling / Design → Layout / Rules), picking canonical field names (`heading`, `media`, `cta`, `background`, `margin`, `alignment`, …), avoiding forbidden bare field names (`style`, `class`, `name`, `key`, `id`, `slot`, `is`, `default`, `ref`), adding conditional visibility with `if`, naming a `Block*.vue` component, writing a factory function in `shared-fields/*.ts` that returns a field, exporting a `*Options` array via `defineSelectOptions`, or consuming a schema-defaulted field in the matching Section/Block component (typing the prop, avoiding `??` fallbacks / `withDefaults` / optional `?` / runtime narrowing for impossible values).
 ---
 
 # Writing Section & Block Definitions
@@ -74,6 +74,10 @@ Full operator list (`get`, `and` / `or` / `not`, `eq` / `ne` / comparisons, `in`
 
 Components rendered as blocks must be named `Block*.vue` (e.g. `BlockProductCard.vue`, `BlockHero.vue`). Resolution rules in [`references/block-naming.md`](./references/block-naming.md).
 
+### Trust the schema when consuming fields
+
+A schema field with a `default` is guaranteed by frontend-core to reach the component already populated, and picker-shaped fields (`select`, `toggle_button`, `content_alignment`, `select_radio`, `checkbox`, …) additionally guarantee the value is one of the declared options. Type the prop as the exact literal union and use it directly — **no `?? 'fallback'`, no `withDefaults` for that field, no optional `?` on the prop, no `safeX` computed with `includes()`-narrowing**. Defensive code for impossible states breaks exhaustive checking and hides the schema contract. Forbidden patterns, the "value really can be absent" edge cases (text/media/link without `default`), and red flags in [`references/trust-the-schema-in-components.md`](./references/trust-the-schema-in-components.md).
+
 ### Shared-fields
 
 Live in `src/runtime/app/shared-fields/*.ts`. Two shapes:
@@ -96,6 +100,8 @@ For exported `*Options` arrays, use `defineSelectOptions(...)` — it preserves 
 | Generic factory in `defineSection.fields` and `name` widens to `string` | Collapse to a single `const Opts extends {...}` generic and derive the resolved `name` from `Opts` at the return type (see `shared-field-factories.md`); or extract the call outside the array context |
 | `*Options` typed via `as const satisfies [Option, ...]` | Replace with `defineSelectOptions(...)` |
 | Block component named `ProductCard` (missing prefix) | Rename to `BlockProductCard` |
+| `props.size ?? 'm'` / `safeVariant` computed / `withDefaults` re-asserting a schema `default` | Drop the defensive code; type the prop as the exact union and use it directly (see `trust-the-schema-in-components.md`) |
+| Optional `?` on a prop whose schema field has a `default` | Drop the `?` — frontend-core guarantees presence |
 
 ## Reference index
 
@@ -105,5 +111,6 @@ For exported `*Options` arrays, use `defineSelectOptions(...)` — it preserves 
 - [`references/block-naming.md`](./references/block-naming.md) — `Block*.vue` naming + component-resolution rules
 - [`references/shared-field-factories.md`](./references/shared-field-factories.md) — factory function literal-type discipline
 - [`references/shared-field-options.md`](./references/shared-field-options.md) — `defineSelectOptions` and `*Options` arrays
+- [`references/trust-the-schema-in-components.md`](./references/trust-the-schema-in-components.md) — no defensive fallbacks in components for schema-defaulted fields
 
 For the broader architectural context (when to create a custom section vs. fork upstream), see the [`three-layer-architecture.md`](../laioutr-platform/references/three-layer-architecture.md) in the `laioutr-platform` skill.
