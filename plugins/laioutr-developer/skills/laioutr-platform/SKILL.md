@@ -14,11 +14,6 @@ data integrations.
 > guidance — internal-only paths, build setup, and namespaces have been
 > intentionally removed.
 
-## Working Style
-
-Be a partner, not a sycophant. Be direct and constructive, offering solutions
-alongside criticism. If a rule is missing or ambiguous, ask before guessing.
-
 If the user provides a rule that's stable enough to encode, write it to a new
 file in the `rules/` directory of their project (not into this plugin —
 the plugin ships read-only rules).
@@ -125,17 +120,6 @@ Adjacent mechanisms:
 
 The official docs MCP server (`laioutr-docs`) indexes all of the above —
 query it for handler signatures, registration patterns, and recipes.
-
-## Bulk Refactoring Discipline
-
-- **Preserve all comments.** When rewriting files, carry over every JSDoc
-  block, TODO, and inline comment from the original.
-- **Audit after refactors** — exported names → helper types → properties →
-  runtime functions → comments. "Typecheck passes" is not sufficient.
-- **TypeScript diamond inheritance:** When splitting an interface into
-  layers where a child extends two parents that both carry the same
-  property at different widths, don't make the mixin extend the base. Let
-  base properties flow through one chain only.
 
 ## Rule Index
 

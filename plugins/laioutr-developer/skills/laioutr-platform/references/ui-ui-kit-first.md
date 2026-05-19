@@ -8,15 +8,7 @@ Any time you are about to author more than ~3 lines of structural markup inside 
 
 ## How
 
-Three discovery surfaces, each for a different question:
-
-| You need to know | Use |
-| --- | --- |
-| Props, emits, slots, usage, code samples | The official docs MCP server (`laioutr-docs`). Falls back to context7 if unreachable. |
-| What visual states / variants a component supports | <https://storybook.laioutr.cloud/> |
-| The actual implementation (e.g. before forking) | <https://github.com/laioutr/ui-source> |
-
-Any exported component from `@laioutr-core/ui-kit` is in scope — import it directly when a match is plausible.
+Search ui-kit via the discovery surfaces (docs MCP, Storybook, ui-source) — see the **Discovery surfaces** table in the parent `laioutr-platform` skill for which surface answers which question. Any exported component from `@laioutr-core/ui-kit` is in scope — import it directly when a match is plausible.
 
 ## Common miss-patterns (always check ui-kit first)
 

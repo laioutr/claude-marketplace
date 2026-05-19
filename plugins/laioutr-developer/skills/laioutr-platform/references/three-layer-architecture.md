@@ -58,12 +58,6 @@ Never `:deep()` into upstream class names — they are not part of the
 public CSS API and change between releases (see
 [`public-css-api.md`](./public-css-api.md)).
 
-## Discovery surfaces
-
-Different questions, different surfaces:
-
-| You need | Use |
-| --- | --- |
-| Props, emits, slots, usage, code samples | The official docs MCP server (registered in this plugin's `.mcp.json` as `laioutr-docs`, pointing at `https://docs.laioutr.io/mcp`). Falls back to context7 if the MCP is unreachable. |
-| What visual states / variants a component supports | The official Storybook: <https://storybook.laioutr.cloud/> |
-| The actual implementation (e.g. before forking) | The component source repo: <https://github.com/laioutr/ui-source> |
+For the discovery surfaces (docs MCP, Storybook, ui-source) that answer
+"what props / states / source does an upstream component have," see the
+**Discovery surfaces** table in the parent `laioutr-platform` skill.
