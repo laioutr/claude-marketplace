@@ -35,15 +35,29 @@ claude /plugin install laioutr-developer@laioutr
 After installing, run `/reload-plugins` (or restart Claude Code) so the
 skills, rules, and MCP server pick up.
 
+### Try it out
+
+Drop a Figma URL or describe a Laioutr task in plain language — no need
+to invoke skills explicitly. A few starting prompts:
+
+- *"Implement the hero in this Figma frame: <figma-url>"* → triggers
+  `figma-design-analysis` → `figma-component-architecture` →
+  `figma-to-component`.
+- *"Add a featured-products section with a configurable product limit."*
+  → triggers `writing-section-block-definitions`.
+- *"How do I render currency in this block?"* → triggers
+  `laioutr-platform`, which then opens `money-currency-code.md`
+  on demand.
+
+To force a specific skill regardless of phrasing, use
+`/laioutr-developer:<skill-name>` — e.g.
+`/laioutr-developer:figma-to-component`.
+
 ### Other install paths
 
 ```bash
 # From a local checkout, for development
 claude /plugin install /path/to/claude-marketplace/plugins/laioutr-developer
-
-# Packaged as a .plugin zip
-cd /path/to/claude-marketplace/plugins/laioutr-developer \
-  && zip -r /tmp/laioutr-developer.plugin . -x "*.DS_Store"
 ```
 
 ## Requirements
@@ -63,7 +77,8 @@ linked documentation expects a developer account on
 Claude writes `{ name: 'price', type: 'number' }` and a `formatCurrency`
 helper that hard-codes `€`.
 
-**After:** Claude reads `rules/money-currency-code.md`, picks the
+**After:** Claude reads
+`skills/laioutr-platform/references/money-currency-code.md`, picks the
 canonical `Money` type from `@laioutr-core/canonical-types`, and uses the
 storefront's locale-aware formatter — no homegrown currency math.
 
@@ -86,10 +101,11 @@ patterns rather than `useBreakpoints` (per
 variant I need?"
 Claude guesses or suggests forking from npm.
 
-**After:** Claude opens `rules/three-layer-architecture.md` and walks
-the ladder: prop override → local override component in your module →
-fork from `laioutr/ui-source` → upstream issue. Forking is explicit and
-documented, not a last resort whispered between developers.
+**After:** Claude opens
+`skills/laioutr-platform/references/three-layer-architecture.md` and
+walks the ladder: prop override → local override component in your
+module → fork from `laioutr/ui-source` → upstream issue. Forking is
+explicit and documented, not a last resort whispered between developers.
 
 ## What this plugin ships
 
@@ -100,33 +116,32 @@ documented, not a last resort whispered between developers.
   (docs MCP / Storybook / ui-source), the Orchestr handler reference,
   commit conventions, and the trigger index for the cross-cutting
   conventions in `references/`.
-- **`skills/laioutr-platform/references/`** — 25 read-on-demand
-  convention files plus `three-layer-architecture.md`. The filename
-  prefix encodes the role the convention applies to (`ui-kit-*` for
-  atom-style primitives, `ui-*` for organisms, no prefix for
-  cross-cutting concerns like Vue SFC mechanics, naming, public CSS
-  contracts, TypeScript discipline). The platform skill indexes them;
-  Claude opens individual files on demand when their trigger matches
-  the task.
-- **Task-triggered skills** — seven skills that auto-load when the
-  prompt matches their description:
-  - `writing-section-block-definitions` — authoring or modifying a
-    `defineSection` / `defineBlock` schema. Carries the sidebar group
-    order, canonical field names, forbidden-name list, `if` operators,
-    factory literal-type discipline, and `defineSelectOptions` rules,
-    plus 6 detailed reference files.
-  - `writing-storybook-stories` — authoring or modifying a Vue
-    Storybook `.stories.ts` file (meta titles, variant naming, no
-    per-viewport exports, theming checks, refactor workflow).
-  - `figma-to-component` — implementing Vue components from a Figma
-    design (or from a `figma-design-analysis` plan).
-  - `figma-design-analysis` — decomposing a Figma frame into a
-    component hierarchy and implementation plan.
-  - `figma-component-architecture` — turning a Figma analysis into a
-    props / slots / events API spec.
-  - `writing-claude-rules` — authoring a new rule file in a project's
-    `rules/` or `.claude/rules/`.
-  - `adr` — capturing an architectural decision.
+- **`skills/laioutr-platform/references/`** — 24 read-on-demand
+  convention files (includes `three-layer-architecture.md`). The
+  filename prefix encodes the role the convention applies to
+  (`ui-kit-*` for atom-style primitives, `ui-*` for organisms, no
+  prefix for cross-cutting concerns like Vue SFC mechanics, naming,
+  public CSS contracts, TypeScript discipline). The platform skill
+  indexes them; Claude opens individual files on demand when their
+  trigger matches the task.
+- **Task-triggered skills** — auto-load when the prompt matches their
+  description. Laioutr-specific:
+
+  | Skill | Triggers on | What it carries |
+  | --- | --- | --- |
+  | `writing-section-block-definitions` | `defineSection` / `defineBlock`, schema fields, `Block*.vue` naming | Sidebar group order, canonical field names, forbidden-name list, `if` operators, factory literal-type discipline, `defineSelectOptions` rules — plus 6 reference files |
+  | `writing-storybook-stories` | `.stories.ts` authoring, Storybook variants | Meta titles, variant naming, no per-viewport exports, theming checks, refactor workflow |
+  | `figma-design-analysis` | Decomposing a multi-component Figma frame (PDP, checkout, full layouts) into a component hierarchy | Frame exploration, component matching, token mapping, themable defaults, subagent orchestration — plus 6 reference files |
+  | `figma-component-architecture` | Producing component API specs (props / slots / events / state) from a design plan | Spec format, core architectural constraints, output template — plus 3 reference files |
+  | `figma-to-component` | Implementing Vue components from a Figma design or analysis plan | Vue component conventions, breakpoint handling, verification pass |
+  | `figma-export-assets` | Exporting illustrations, photos, logos, markers, screenshots, custom icons from a Figma frame into the repo | MCP probe → inventory → leaf isolation → format selection → destination → bytes → wire-up |
+
+  General-purpose authoring helpers (bundled for convenience):
+
+  | Skill | Triggers on | What it carries |
+  | --- | --- | --- |
+  | `writing-claude-rules` | Authoring a rule file in a project's `rules/` or `.claude/rules/` | Position-claim shape, verification before encoding, voice discipline, examples format |
+  | `adr` | Capturing an architectural decision | ADR section template, clarification-first workflow |
 - **`.mcp.json`** — registers the `laioutr-docs` HTTP MCP server at
   `https://docs.laioutr.io/mcp`. This is how Claude searches the
   official Laioutr developer documentation (Orchestr framework, data
@@ -146,14 +161,24 @@ Two surfaces, both triggered by your prompt:
    task-specific skills (`writing-section-block-definitions`,
    `writing-storybook-stories`, the Figma skills) trigger on narrower
    prompts. The matching skill's `SKILL.md` body loads in full.
+
+   To override automatic matching, force a specific skill with
+   `/laioutr-developer:<skill-name>` (e.g.
+   `/laioutr-developer:figma-to-component`).
 2. **References load on demand.** Each skill's body indexes the
    reference files in its `references/` directory with one-line
    triggers. When a task plausibly matches a reference's trigger, Claude
-   opens that file before writing or changing code.
+   opens that file before writing or changing code. For example, the
+   `laioutr-platform` index includes entries like:
 
-This is deliberate. Dumping all 30+ references into every turn would
-burn context and dilute attention; loading the matching skill plus the
-references it points to keeps the conventions sharp.
+   ```
+   - money-currency-code.md — handling Money objects, prices, or
+     currency in code, stories, or fixtures
+   - no-wrapper-css-overrides.md — before writing CSS in a parent
+     that targets a child component's class names
+   - parent-prefix-naming.md — naming a Vue component, especially
+     before reaching for <Parent><Part> compound naming
+   ```
 
 If Claude misses a reference that obviously applies, name it explicitly
 ("check `section-config-standard.md` before you change the schema").
@@ -201,18 +226,6 @@ task from your message. If `figma-to-component` doesn't fire, mention
 also force a skill with `/laioutr-developer:<skill-name>` once the
 plugin is installed.
 
-**I see references to `packages/ui-kit/` in skill bodies.** Some skill
-bodies still use monorepo path conventions as shorthand. Read these as
-"the ui-kit layer in your project", not literal paths. The rules have
-been rewritten to avoid this; skill rewrites are tracked in
-[`MAPPING.md`](./MAPPING.md).
-
-**Validate the plugin manifest:**
-
-```bash
-claude plugin validate ./.claude-plugin/plugin.json
-```
-
 ## Relationship to the internal monorepo
 
 This plugin is curated from the Laioutr core team's internal
@@ -228,31 +241,34 @@ laioutr-developer/
 ├── .claude-plugin/
 │   └── plugin.json                          # Plugin manifest
 ├── .mcp.json                                # MCP server config (laioutr-docs)
+├── LICENSE                                  # MIT
 ├── MAPPING.md                               # What was carried over from the monorepo, and why
 ├── README.md
 └── skills/
     ├── laioutr-platform/                    # Auto-loads on Laioutr work
     │   ├── SKILL.md                         # Platform overview + reference index
-    │   └── references/                      # 25 cross-cutting conventions + 1 architecture page
+    │   └── references/                      # 24 cross-cutting conventions (includes three-layer-architecture)
     ├── writing-section-block-definitions/   # Auto-loads on defineSection / defineBlock work
     │   ├── SKILL.md                         # Overview + quick reference
     │   └── references/                      # 6 deep-detail files (schema standard, if, factories, naming, …)
     ├── writing-storybook-stories/           # Auto-loads on .stories.ts work
     │   └── SKILL.md                         # Inline (no extra references)
     ├── figma-design-analysis/               # Figma frame → component hierarchy
-    ├── figma-to-component/                  # Implement Vue from Figma
+    │   ├── SKILL.md
+    │   └── references/                      # 6 deep-detail files (exploration, token mapping, themable defaults, …)
     ├── figma-component-architecture/        # Figma analysis → component API spec
-    ├── writing-claude-rules/                # Author a new rule file
-    └── adr/                                 # Capture an ADR
+    │   ├── SKILL.md
+    │   └── references/                      # 3 deep-detail files (core constraints, spec format, output template)
+    ├── figma-to-component/                  # Implement Vue from Figma
+    │   └── SKILL.md                         # Inline (no extra references)
+    ├── figma-export-assets/                 # Export illustrations / photos / logos / icons from Figma into the repo
+    │   └── SKILL.md                         # Inline (no extra references)
+    ├── writing-claude-rules/                # Author a new rule file (general-purpose)
+    │   └── SKILL.md
+    └── adr/                                 # Capture an ADR (general-purpose)
+        └── SKILL.md
 ```
-
-## For the Laioutr core team
-
-Re-syncing this plugin from the internal monorepo is tracked in
-[`MAPPING.md`](./MAPPING.md), including the curated include/exclude
-list and the rewrite notes for each carried-over file. External users
-can ignore this section.
 
 ## License
 
-See the top-level marketplace repository for license terms.
+MIT — see [`LICENSE`](./LICENSE).
