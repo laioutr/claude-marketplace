@@ -140,6 +140,7 @@ open the file before writing code.
 - [`references/parent-prefix-naming.md`](./references/parent-prefix-naming.md) — naming a Vue component, especially before reaching for `<Parent><Part>` compound naming
 - [`references/public-css-api.md`](./references/public-css-api.md) — adding, renaming, or removing CSS class names exposed by any component you ship
 - [`references/story-icons-must-exist.md`](./references/story-icons-must-exist.md) — referencing an icon name in a `.stories.ts`
+- [`references/sub-part-tag-prop-naming.md`](./references/sub-part-tag-prop-naming.md) — exposing a prop or schema field that controls the HTML tag of a named sub-part (heading, subline, caption); name it `<part>As`
 - [`references/surface-tone.md`](./references/surface-tone.md) — implementing a container that paints a background (light/dark/bright), or text/icons whose contrast must adapt
 - [`references/typescript-refactoring.md`](./references/typescript-refactoring.md) — deleting or renaming a symbol, planning a migration, or doing reference lookups (use LSP, not grep)
 - [`references/unique-component-names.md`](./references/unique-component-names.md) — picking a basename for a new Vue component file in your module
