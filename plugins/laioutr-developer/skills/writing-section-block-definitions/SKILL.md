@@ -76,7 +76,7 @@ Components rendered as blocks must be named `Block*.vue` (e.g. `BlockProductCard
 
 ### Trust the schema when consuming fields
 
-A schema field with a `default` is guaranteed by frontend-core to reach the component already populated, and picker-shaped fields (`select`, `toggle_button`, `content_alignment`, `select_radio`, `checkbox`, …) additionally guarantee the value is one of the declared options. Type the prop as the exact literal union and use it directly — **no `?? 'fallback'`, no `withDefaults` for that field, no optional `?` on the prop, no `safeX` computed with `includes()`-narrowing**. Defensive code for impossible states breaks exhaustive checking and hides the schema contract. Forbidden patterns, the "value really can be absent" edge cases (text/media/link without `default`), and red flags in [`references/trust-the-schema-in-components.md`](./references/trust-the-schema-in-components.md).
+A schema field with a `default` is guaranteed by frontend-core to reach the component already populated, picker-shaped fields (`select`, `toggle_button`, `content_alignment`, `select_radio`, `checkbox`, …) additionally guarantee the value is one of the declared options, and `object` / `array` fields are always materialized — `{}` with sub-fields recursively populated, or `[]` — never `null` or `undefined`, with or without a `default`. Type the prop as the exact literal union, the exact object shape, or `T[]`, and use it directly — **no `?? 'fallback'`, no `?? {}`, no `?? []`, no optional chaining on the prop, no `withDefaults`, no optional `?` on the prop, no `v-if` guarding the prop's existence, no `safeX` computed with `includes()`-narrowing**. Defensive code for impossible states breaks exhaustive checking and hides the schema contract. Forbidden patterns, the "value really can be absent" edge cases (text/media/link without `default`), and red flags in [`references/trust-the-schema-in-components.md`](./references/trust-the-schema-in-components.md).
 
 ### Shared-fields
 
@@ -102,6 +102,8 @@ For exported `*Options` arrays, use `defineSelectOptions(...)` — it preserves 
 | Block component named `ProductCard` (missing prefix) | Rename to `BlockProductCard` |
 | `props.size ?? 'm'` / `safeVariant` computed / `withDefaults` re-asserting a schema `default` | Drop the defensive code; type the prop as the exact union and use it directly (see `trust-the-schema-in-components.md`) |
 | Optional `?` on a prop whose schema field has a `default` | Drop the `?` — frontend-core guarantees presence |
+| `props.items ?? []` / `props.items?.map(...)` / `v-if="props.items"` on an `array` field | Drop it — arrays are always materialized as `[]`; use `.length` if you need an empty-state branch (see `trust-the-schema-in-components.md`) |
+| `props.style ?? {}` / `props.style?.foo` / optional `?` on an `object` prop | Drop it — objects are always materialized with sub-fields recursively populated; guard the inner leaves, not the object prop |
 
 ## Reference index
 
@@ -111,6 +113,6 @@ For exported `*Options` arrays, use `defineSelectOptions(...)` — it preserves 
 - [`references/block-naming.md`](./references/block-naming.md) — `Block*.vue` naming + component-resolution rules
 - [`references/shared-field-factories.md`](./references/shared-field-factories.md) — factory function literal-type discipline
 - [`references/shared-field-options.md`](./references/shared-field-options.md) — `defineSelectOptions` and `*Options` arrays
-- [`references/trust-the-schema-in-components.md`](./references/trust-the-schema-in-components.md) — no defensive fallbacks in components for schema-defaulted fields
+- [`references/trust-the-schema-in-components.md`](./references/trust-the-schema-in-components.md) — no defensive fallbacks for schema-defaulted picker fields, or for `object` / `array` fields (always materialized)
 
 For the broader architectural context (when to create a custom section vs. fork upstream), see the [`three-layer-architecture.md`](../laioutr-platform/references/three-layer-architecture.md) in the `laioutr-platform` skill.
