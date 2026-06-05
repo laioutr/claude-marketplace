@@ -587,3 +587,36 @@ split. Fixed across:
 `figma-component-architecture/SKILL.md`'s Phase 1 `grep` examples
 against the same — these are discovery searches against installed
 packages, correct for external devs.
+
+## House-style prop-naming rules carried over (2026-06-05)
+
+Four new rules from the May 2026 UI-library house-style audit were copied
+from `.claude/rules/` into `skills/laioutr-platform/references/` and
+indexed in that skill's Rule Index under "Component conventions".
+
+| Source path | Plugin path | Action |
+| --- | --- | --- |
+| `rules/boolean-prop-naming.md` | `references/boolean-prop-naming.md` | copied + scrubbed |
+| `rules/component-state-contract.md` | `references/component-state-contract.md` | copied + scrubbed |
+| `rules/no-hardcoded-ui-strings.md` | `references/no-hardcoded-ui-strings.md` | copied + scrubbed |
+| `rules/prop-naming-vocabulary.md` | `references/prop-naming-vocabulary.md` | copied + scrubbed |
+
+Scrubs applied to all four:
+
+- Dropped the "Locked in the May 2026 UI-library house-style audit … Full
+  rationale: `.claude/review/DECISIONS.md`" provenance line; reframed the
+  `packages/ui-kit/` · `ui/` · `ui-app/` scope as "any component your
+  module ships, and the upstream `@laioutr-core/*` patterns you mirror"
+  (mirrors the `sub-part-tag-prop-naming.md` framing).
+- Cross-refs between the four rewritten to relative `./<file>.md`.
+- `component-state-contract.md`: monorepo cross-ref
+  `../../packages/ui-kit/.claude/rules/reka-ui-wrapper-patterns.md` →
+  `./reka-ui-wrapper-patterns.md` (present in `references/`).
+- `no-hardcoded-ui-strings.md`: broken link to the non-carried
+  `translations-tl-vs-useLocale.md` replaced with an inline note (`$tl` in
+  templates, `useLocale().t()` in script); internal `ui-kit/locale/{en,de}.ts`
+  path generalized to "your module's locale files".
+- `prop-naming-vocabulary.md`: internal "audit's Phase F enumerated …"
+  reference softened to "only a few upstream components moved"; broken
+  link to the excluded `rename-workflow.md` replaced with an inline
+  summary of the rename touchpoints.

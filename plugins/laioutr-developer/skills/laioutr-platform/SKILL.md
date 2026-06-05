@@ -134,10 +134,14 @@ open the file before writing code.
 
 ### Component conventions (apply to any component your module ships)
 
+- [`references/boolean-prop-naming.md`](./references/boolean-prop-naming.md) — naming a boolean prop; deciding whether it takes an `is` prefix (state the component is in → bare token; fact about an external entity → `is*`)
+- [`references/component-state-contract.md`](./references/component-state-contract.md) — adding v-model, validation (`invalid` / `errorMessage`), or `Field` context to a form input or overlay
 - [`references/money-currency-code.md`](./references/money-currency-code.md) — handling Money objects, prices, or currency in code, stories, or fixtures
+- [`references/no-hardcoded-ui-strings.md`](./references/no-hardcoded-ui-strings.md) — adding user-visible text to a component; before shipping an English/German string default instead of a locale key
 - [`references/no-wrapper-css-overrides.md`](./references/no-wrapper-css-overrides.md) — before writing CSS in a parent that targets a child component's class names
 - [`references/nuxt-hooks.md`](./references/nuxt-hooks.md) — naming or wiring a Nuxt hook
 - [`references/parent-prefix-naming.md`](./references/parent-prefix-naming.md) — naming a Vue component, especially before reaching for `<Parent><Part>` compound naming
+- [`references/prop-naming-vocabulary.md`](./references/prop-naming-vocabulary.md) — naming a prop for size, icon, link/`src`, or visual `variant`; deciding whether to rename a `title` / `description` prop
 - [`references/public-css-api.md`](./references/public-css-api.md) — adding, renaming, or removing CSS class names exposed by any component you ship
 - [`references/story-icons-must-exist.md`](./references/story-icons-must-exist.md) — referencing an icon name in a `.stories.ts`
 - [`references/sub-part-tag-prop-naming.md`](./references/sub-part-tag-prop-naming.md) — exposing a prop or schema field that controls the HTML tag of a named sub-part (heading, subline, caption); name it `<part>As`
