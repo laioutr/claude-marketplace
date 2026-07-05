@@ -64,12 +64,12 @@ claude /plugin install /path/to/claude-marketplace/plugins/laioutr-developer
 
 - Claude Code 2.x with plugin support (`/plugin` command available).
 - Node 20+ and pnpm or npm for the storefronts you're working on.
-- Outbound HTTPS to `https://docs.laioutr.io` so the docs MCP server can
+- Outbound HTTPS to `https://docs.laioutr.com` so the docs MCP server can
   connect.
 
 You do not need a Laioutr account to install the plugin, but most of the
 linked documentation expects a developer account on
-<https://docs.laioutr.io>.
+<https://docs.laioutr.com>.
 
 ## What you'll see Claude doing differently
 
@@ -143,7 +143,7 @@ explicit and documented, not a last resort whispered between developers.
   | `writing-claude-rules` | Authoring a rule file in a project's `rules/` or `.claude/rules/` | Position-claim shape, verification before encoding, voice discipline, examples format |
   | `adr` | Capturing an architectural decision | ADR section template, clarification-first workflow |
 - **`.mcp.json`** — registers the `laioutr-docs` HTTP MCP server at
-  `https://docs.laioutr.io/mcp`. This is how Claude searches the
+  `https://docs.laioutr.com/mcp`. This is how Claude searches the
   official Laioutr developer documentation (Orchestr framework, data
   model, CLI, UI components, sections and blocks, TypeScript API
   reference) during a session.
@@ -196,7 +196,7 @@ developer documentation in-session. Use it for:
 - Section / block schema field types and constraints.
 - CLI commands and the canonical TypeScript types.
 
-Setup details: <https://docs.laioutr.io/getting-started/mcp-server>.
+Setup details: <https://docs.laioutr.com/getting-started/mcp-server>.
 
 The same content is also indexed by Context7 as a fallback when the
 official MCP is unreachable, but prefer the official server when both
@@ -205,7 +205,7 @@ are available — it is closer to source of truth.
 ## Troubleshooting
 
 **The docs MCP server isn't connecting.** Check that outbound HTTPS to
-`docs.laioutr.io` is allowed. Run `/mcp` inside Claude Code to see the
+`docs.laioutr.com` is allowed. Run `/mcp` inside Claude Code to see the
 connection status for `laioutr-docs`. If the server is failing, Claude
 will still work — it will just lean on Context7 (if installed) and its
 training data instead of authoritative docs.

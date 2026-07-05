@@ -2,7 +2,7 @@
 
 Money objects are `{ amount, currency }` where `amount` is **minor units (cents)** and `currency` is an **ISO 4217 code** (`EUR`, `USD`, …). Never a symbol (`€`, `$`), never a label (`"Euro"`), never lowercase.
 
-Canonical reference: [Money type — Laioutr docs](https://docs.laioutr.io/frontend/api-reference/common-types/money).
+Canonical reference: [Money type — Laioutr docs](https://docs.laioutr.com/frontend/api-reference/common-types/money).
 
 Default to `EUR` in stories, fixtures, and any mock data unless a specific currency is material to the example.
 

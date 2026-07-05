@@ -81,7 +81,7 @@ each existed in multiple packages).
 | `packages/ui/.claude/rules/package-role.md` | `rules/ui/package-role.md` | copied |
 | `packages/ui/.claude/rules/storybook-categorization.md` | `rules/ui/storybook-categorization.md` | copied |
 | `packages/ui/.claude/rules/ui-kit-first.md` | `rules/ui/ui-kit-first.md` | copied + Glob example rewritten to `node_modules/@laioutr-core/ui-kit/` |
-| `packages/ui/.claude/rules/z-ordering.md` | `rules/ui/z-ordering.md` | copied — points at `docs.laioutr.io` which the docs MCP can also reach |
+| `packages/ui/.claude/rules/z-ordering.md` | `rules/ui/z-ordering.md` | copied — points at `docs.laioutr.com` which the docs MCP can also reach |
 | `packages/ui/.claude/rules/css-first-responsive.md` | — | **excluded** — only 7 lines, a pointer to the ui-kit version |
 | `packages/ui-app/CLAUDE.md` | `rules/ui-app/CLAUDE.md` | copied + cross-ref rewritten |
 | `packages/ui-app/.claude/rules/*.md` (7 files) | `rules/ui-app/*.md` | copied + `packages/...` paths rewritten + Cockpit Studio references softened to "Studio" |
@@ -130,7 +130,7 @@ review — they should be updated before the plugin is shipped publicly.
 | `.claude/settings.json` | — | excluded (project-local Claude config) |
 | `.claude/settings.local.json` | — | excluded (machine-local) |
 | `.claude/review/` | — | excluded (audit/review work-in-progress notes) |
-| — | `.mcp.json` | **new** — registers an HTTP MCP server pointing at `https://docs.laioutr.io/mcp` so the plugin can search the Laioutr developer docs at runtime |
+| — | `.mcp.json` | **new** — registers an HTTP MCP server pointing at `https://docs.laioutr.com/mcp` so the plugin can search the Laioutr developer docs at runtime |
 | — | `.claude-plugin/marketplace.json` | **new** — makes this repo a single-plugin Claude Code marketplace so it can be installed via `claude /plugin marketplace add laioutr/claude-plugin-developer` |
 
 ## Re-syncing from the monorepo
@@ -319,7 +319,7 @@ Structural changes:
   <https://github.com/laioutr/ui-source>, (4) upstream issue. The
   forking option is explicit — not the default, but valid.
 - **Three discovery surfaces documented:** docs MCP (`laioutr-docs` →
-  `https://docs.laioutr.io/mcp`) for props/emits/slots/usage,
+  `https://docs.laioutr.com/mcp`) for props/emits/slots/usage,
   Storybook (<https://storybook.laioutr.cloud/>) for visual states,
   and `laioutr/ui-source` for implementation/forking.
 
@@ -388,8 +388,8 @@ Content edits (residual leaks + reframing):
   `writing-section-block-migration-manifest` skill removed; Context7-vs-laioutr-docs preference clarified
   (Laioutr docs MCP first, Context7 fallback).
 - **`.mcp.json` URL fix**: `https://docs.laioutr.com/mcp` →
-  `https://docs.laioutr.io/mcp` (the canonical URL per
-  <https://docs.laioutr.io/getting-started/mcp-server>).
+  `https://docs.laioutr.com/mcp` (the canonical URL per
+  <https://docs.laioutr.com/getting-started/mcp-server>).
 
 Net rule count: 31 rules + 1 architecture page = 32 files in
 `skills/laioutr-platform/rules/` (down from 38 + 3 layer `CLAUDE.md`

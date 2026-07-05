@@ -2,7 +2,7 @@
   "mcpServers": {
     "laioutr-docs": {
       "type": "http",
-      "url": "https://docs.laioutr.io/mcp"
+      "url": "https://docs.laioutr.com/mcp"
     }
   }
 }

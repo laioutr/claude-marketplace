@@ -1,6 +1,6 @@
 # Z-Ordering
 
-Reference: [docs.laioutr.io/laioutr-ui/getting-started/z-ordering](https://docs.laioutr.io/laioutr-ui/getting-started/z-ordering).
+Reference: [docs.laioutr.com/laioutr-ui/getting-started/z-ordering](https://docs.laioutr.com/laioutr-ui/getting-started/z-ordering).
 
 Use tokens, never raw z-index values, for anything that paints across sections:
 

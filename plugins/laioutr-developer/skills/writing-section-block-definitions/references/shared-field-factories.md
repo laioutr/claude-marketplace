@@ -2,7 +2,7 @@
 
 When a `shared-fields/*.ts` export is a **function** that returns a field (as opposed to a static object), the return type must narrow to a literal — especially the `name` property — even when the call site lives inside `defineSection`/`defineBlock`'s `fields` array.
 
-Canonical reference: [Shared field factories — Laioutr docs](https://docs.laioutr.io/apps/app-development/shared-field-factories).
+Canonical reference: [Shared field factories — Laioutr docs](https://docs.laioutr.com/apps/app-development/shared-field-factories).
 
 ## The contextual-widening trap
 

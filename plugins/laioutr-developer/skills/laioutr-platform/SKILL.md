@@ -21,7 +21,7 @@ the plugin ships read-only rules).
 For Laioutr-specific questions (Orchestr, sections/blocks, schema fields,
 upstream `@laioutr-core/ui-kit` / `ui` / `ui-app` components), prefer the
 official Laioutr docs MCP server (`laioutr-docs`, registered in this
-plugin's `.mcp.json` at `https://docs.laioutr.io/mcp`) over guessing.
+plugin's `.mcp.json` at `https://docs.laioutr.com/mcp`) over guessing.
 For general Vue, Nuxt, TypeScript, Pinia, UnoCSS, Storybook, and
 Playwright questions, prefer Context7 MCP if available.
 
@@ -65,7 +65,7 @@ Different questions go to different surfaces:
 
 | You need | Use |
 | --- | --- |
-| Props, emits, slots, usage, code samples for any upstream component | The official docs MCP (`laioutr-docs` → `https://docs.laioutr.io/mcp`). Falls back to context7 when unreachable. |
+| Props, emits, slots, usage, code samples for any upstream component | The official docs MCP (`laioutr-docs` → `https://docs.laioutr.com/mcp`). Falls back to context7 when unreachable. |
 | What visual states / variants a component supports | <https://storybook.laioutr.cloud/> |
 | The actual implementation (e.g. before forking) | <https://github.com/laioutr/ui-source> |
 
@@ -79,12 +79,12 @@ duplicate inline:
 
 | Area | Entry point |
 | --- | --- |
-| Multi-language storefronts | <https://docs.laioutr.io/frontend/features/multi-language-support> |
-| Multi-market storefronts | <https://docs.laioutr.io/frontend/features/multi-market> |
-| Custom page types and routing | <https://docs.laioutr.io/frontend/features/pagetypes> |
-| Consent management / adapters | <https://docs.laioutr.io/frontend/features/consent-management> |
-| Checkout & payment integrations | <https://docs.laioutr.io/checkout> |
-| Hosting / deployment / BYO server | <https://docs.laioutr.io/hosting> |
+| Multi-language storefronts | <https://docs.laioutr.com/frontend/features/multi-language-support> |
+| Multi-market storefronts | <https://docs.laioutr.com/frontend/features/multi-market> |
+| Custom page types and routing | <https://docs.laioutr.com/frontend/features/pagetypes> |
+| Consent management / adapters | <https://docs.laioutr.com/frontend/features/consent-management> |
+| Checkout & payment integrations | <https://docs.laioutr.com/checkout> |
+| Hosting / deployment / BYO server | <https://docs.laioutr.com/hosting> |
 
 ## Section Component Pattern
 
@@ -108,15 +108,15 @@ reference for each:
 
 | Handler                 | Responsibility                                   | Docs |
 | ----------------------- | ------------------------------------------------ | ---- |
-| **Query / Link Handlers** | Fetch entity IDs and define relationships      | <https://docs.laioutr.io/frontend/orchestr/queries> |
-| **Component Resolvers** | Resolve data components for entities             | <https://docs.laioutr.io/frontend/orchestr/component-resolvers> |
-| **Action Handlers**     | Handle mutations and side effects                | <https://docs.laioutr.io/frontend/orchestr/actions> |
+| **Query / Link Handlers** | Fetch entity IDs and define relationships      | <https://docs.laioutr.com/frontend/orchestr/queries> |
+| **Component Resolvers** | Resolve data components for entities             | <https://docs.laioutr.com/frontend/orchestr/component-resolvers> |
+| **Action Handlers**     | Handle mutations and side effects                | <https://docs.laioutr.com/frontend/orchestr/actions> |
 
 Adjacent mechanisms:
 
-- **Middleware** — request/response interception: <https://docs.laioutr.io/frontend/orchestr/middleware>
-- **Filters** — request/response filtering contract: <https://docs.laioutr.io/frontend/orchestr/filters>
-- **Caching** — three cache layers + strategies: <https://docs.laioutr.io/frontend/orchestr/caching>
+- **Middleware** — request/response interception: <https://docs.laioutr.com/frontend/orchestr/middleware>
+- **Filters** — request/response filtering contract: <https://docs.laioutr.com/frontend/orchestr/filters>
+- **Caching** — three cache layers + strategies: <https://docs.laioutr.com/frontend/orchestr/caching>
 
 The official docs MCP server (`laioutr-docs`) indexes all of the above —
 query it for handler signatures, registration patterns, and recipes.

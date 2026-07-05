@@ -17,9 +17,9 @@ This standard covers **structure, naming, and ordering**. It does not restate
 field-type mechanics (prop types, fallbacks, allowed properties per type) —
 those live in the public docs:
 
-- [Section Definitions](https://docs.laioutr.io/apps/app-development/section-definitions)
-- [Block Definitions](https://docs.laioutr.io/apps/app-development/block-definitions)
-- [Schema Fields](https://docs.laioutr.io/apps/app-development/schema-fields)
+- [Section Definitions](https://docs.laioutr.com/apps/app-development/section-definitions)
+- [Block Definitions](https://docs.laioutr.com/apps/app-development/block-definitions)
+- [Schema Fields](https://docs.laioutr.com/apps/app-development/schema-fields)
 
 The official docs MCP server (`laioutr-docs`) indexes these pages — query it directly when you need field-type mechanics.
 
@@ -96,7 +96,7 @@ Every section and block that uses these concepts **must** use exactly the
 > properties are `type`, `name`, `label`, `default`, `description` (plus
 > type-specific properties like `options`, `placeholder`, `schema`). Do
 > **not** add `required: true` — fields without a value use a runtime
-> fallback (see [Schema Fields docs](https://docs.laioutr.io/apps/app-development/schema-fields)).
+> fallback (see [Schema Fields docs](https://docs.laioutr.com/apps/app-development/schema-fields)).
 
 ### Content
 

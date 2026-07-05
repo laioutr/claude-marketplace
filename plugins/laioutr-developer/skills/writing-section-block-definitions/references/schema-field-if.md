@@ -32,7 +32,7 @@ types:
   configured" but not inspect entity contents.
 
 Missing entries fall back to the per-type runtime fallback — see the
-[Schema Fields docs](https://docs.laioutr.io/apps/app-development/schema-fields)
+[Schema Fields docs](https://docs.laioutr.com/apps/app-development/schema-fields)
 for the per-type fallback table.
 
 ## Path syntax
