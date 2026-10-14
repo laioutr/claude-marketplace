@@ -112,14 +112,14 @@ Read existing components referenced in the analysis document to ground the archi
 **Search for patterns:**
 ```bash
 # Find all createContext usages to understand compound component conventions
-grep -r "createContext" node_modules/@laioutr-core/ui-kit/src/runtime/app/components/ --include="*.vue" --include="*.ts"
+grep -r "createContext" node_modules/@laioutr-core/ui-kit/dist/runtime/app/components/ --include="*.vue" --include="*.ts"
 
 # Find defineModel usage for v-model patterns
-grep -r "defineModel" node_modules/@laioutr-core/ui-kit/src/runtime/app/components/ --include="*.vue"
+grep -r "defineModel" node_modules/@laioutr-core/ui-kit/dist/runtime/app/components/ --include="*.vue"
 
 # Search for semantically similar components (adapt keywords to the design)
 # e.g., for a checkout design with discount badges:
-grep -r "discount\|flag\|badge" node_modules/@laioutr-core/ui-kit/src/runtime/app/components/ --include="*.vue" -l
+grep -r "discount\|flag\|badge" node_modules/@laioutr-core/ui-kit/dist/runtime/app/components/ --include="*.vue" -l
 ```
 
 (Path layout assumes npm/yarn; pnpm users adjust to `node_modules/.pnpm/...`.)

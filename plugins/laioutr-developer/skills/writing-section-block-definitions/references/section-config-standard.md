@@ -41,6 +41,14 @@ if the component has no options in it — but never reorder them.
    single top-level `Rules` fieldset when your section/block has more
    than one such control.
 
+In the schema, Content and Design are fieldsets labelled `'Content'` and
+`'Design'`. Styling and Layout are not fieldsets of their own: inside the
+Design fieldset, an `info` field opens each sub-group
+(`{ type: 'info', name: 'stylingDivider', label: 'Styling' }`, then
+`{ type: 'info', name: 'layoutDivider', label: 'Layout' }`), as the
+upstream Sections do. `info` fields render a heading in Studio and never
+become props.
+
 No other top-level panels. "Behaviour" / "Advanced" / "Settings" panels
 seen in legacy code are not part of the standard; their fields belong in
 Content (if editorial) or Design (if visual).
@@ -141,7 +149,7 @@ When refactoring an existing section/block whose field names drift from the cano
 - `blockMargin` → `margin`
 - `innerBlockPadding` → `padding`
 - `containerStyle`, `accordionStyle`, or any other `<component>Style` used as the top-level variant selector → `variant`. (The bare `style` is forbidden — see [`forbidden-field-names.md`](./forbidden-field-names.md).)
-- Per-field `imageSizeMode`, `aspectRatio` live in Design → Layout with their own names; do not re-alias them.
+- Bespoke outer-box `height`, `aspectRatio`, `desktopHeight` / `mobileHeight` or `orientation` fields → one `sizing` object field in Design → Layout, passed to `<Sizer>` (see [`sizing.md`](./sizing.md)). Fields that size a named inner region (`imageSizeMode`, `mediaAspectRatio`) keep their own names; do not re-alias them to `sizing`.
 
 ## 4. Shared-field presets
 

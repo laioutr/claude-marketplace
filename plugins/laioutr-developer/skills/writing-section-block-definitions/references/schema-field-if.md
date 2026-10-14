@@ -160,15 +160,18 @@ sections created before the field was added to the schema. Reliable
 | `text`, `textarea`, `richtext`                                           | `''`                                          | `['!', ['get', 'x']]`                             |
 | `checkbox`                                                               | `false` (or `true` for visibility decorators) | `['!', ['get', 'x']]`                             |
 | `select`, `radio`, `toggle_button`                                       | First option's value                          | `['==', ['get', 'x'], '<first option>']`          |
+| `content_alignment`                                                      | `'center-center'` (`'center'` single-axis)    | `['==', ['get', 'x'], 'center-center']`           |
 | `object`                                                                 | Object of recursive fallbacks                 | Drill into a leaf                                 |
 | `array`                                                                  | `[]`                                          | `['==', ['get', 'x'], [[]]]` or `['len', …] == 0` |
 | `json`                                                                   | `null`                                        | `['==', ['get', 'x'], null]`                      |
-| `number`, `icon`, `media`, `link`, `query`, `color`, `content_alignment` | `undefined`                                   | `['!', ['get', 'x']]`                             |
+| `number`, `icon`, `media`, `link`, `query`, `color`                      | `undefined`                                   | `['!', ['get', 'x']]`                             |
 
-For every field type except `select`/`radio`/`toggle_button` and `array`
-(whose fallbacks are truthy), `['get', 'x']` is itself a truthy "is set"
-test at `if`-toplevel and `['!', ['get', 'x']]` is the "is unset" test;
-the `bool`-wrapped forms are equivalent (see `bool` note above).
+For every field type except `select`/`radio`/`toggle_button`,
+`content_alignment` and `array` (whose fallbacks are truthy),
+`['get', 'x']` is itself a truthy "is set" test at `if`-toplevel and
+`['!', ['get', 'x']]` is the "is unset" test; the `bool`-wrapped forms
+are equivalent (see `bool` note above). A picker or `content_alignment`
+field can't distinguish "unset" from "set to the fallback value".
 
 For nested object fields, the unwrap recursively fallbacks the entire
 subtree, so `['get', 'cta.text']` returns `''` reliably even if `cta`
@@ -219,7 +222,7 @@ hide the Studio control the way `if` does.
   runtime are configured separately upstream; keep them in sync if a
   future Studio release adds another operator bundle.
 - Section/block authoring: anywhere in your module
-  (typically `src/runtime/app/section/`, `src/runtime/app/block/`,
+  (typically `src/runtime/app/sections/`, `src/runtime/app/blocks/`,
   `src/runtime/app/shared-fields/`).
 
 ## Related

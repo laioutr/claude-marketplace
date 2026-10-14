@@ -1,6 +1,6 @@
 # No Outer Chrome on Primitive Components
 
-If you author a custom primitive in your module — or fork one from `https://github.com/laioutr/ui-source` — its **bounding box must equal its visible footprint**. Spacing inside the control's own border is anatomy and stays. Spacing around the control is context and belongs to whoever places it.
+If you author a custom primitive in your module — or fork one from `https://github.com/laioutr-ui/ui-kit` — its **bounding box must equal its visible footprint**. Spacing inside the control's own border is anatomy and stays. Spacing around the control is context and belongs to whoever places it.
 
 When consuming upstream `@laioutr-core/ui-kit` primitives, expect this rule to already hold: their bounding box equals their visible footprint. If you need outer spacing, wrap them yourself — don't override their internals (see [`no-wrapper-css-overrides.md`](./no-wrapper-css-overrides.md)).
 

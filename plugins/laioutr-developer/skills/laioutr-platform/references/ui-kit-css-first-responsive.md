@@ -31,7 +31,7 @@ For these there is no server render to mismatch against, so a client-side comput
 
 Before reaching for the composable, ask whether the child can be restructured to accept a CSS-driven layout (display toggles, grid-template switches, container queries, `order`, etc. usually cover more than you'd expect). If it genuinely can't and the component is part of the initial SSR tree, prefer in this order:
 
-1. **Server-aware breakpoint via upstream.** The proper long-term fix is for `useBreakpoints` to derive a real `ssrWidth` from UA parsing so server and client agree on the initial render. This isn't yet implemented upstream — if you need it, file an issue against `laioutr/ui-source` or fork the composable into your module. Don't try to monkey-patch the imported composable.
+1. **Server-aware breakpoint via upstream.** The proper long-term fix is for `useBreakpoints` to derive a real `ssrWidth` from UA parsing so server and client agree on the initial render. This isn't yet implemented upstream — if you need it, file an issue against `laioutr-ui/ui-kit` or fork the composable into your module. Don't try to monkey-patch the imported composable.
 2. **Accept a hydration mismatch.** Ship the SSR default, let hydration swap the subtree on the client. The user sees visible content immediately and a brief flicker — tolerable, and crawlable.
 3. **`<ClientOnly>` as a last resort only.** Wrapping in `<ClientOnly>` ships an empty subtree on the server: the content is invisible to crawlers, delays first paint, and causes CLS when it mounts. Prefer a hydration mismatch over `<ClientOnly>`.
 

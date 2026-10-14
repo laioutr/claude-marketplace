@@ -38,20 +38,17 @@ overlays.white_alpha.7 -> --overlay-white-alpha-7 (overlays/ -> overlay-)
 
 ## Validating Hex Colors
 
-When Figma provides a hex color (e.g., `#743dcd`), check if it matches an existing token. Search the installed `@laioutr-core/ui-tokens` source:
+When Figma provides a hex color (e.g., `#743dcd`), check if it matches an existing token. The published `@laioutr-core/ui-tokens` package ships only the built CSS (`dist/`), one file per theme and color mode:
 
 ```bash
-# Search base tokens (case-insensitive)
-grep -ri "743dcd" node_modules/@laioutr-core/ui-tokens/src/figma/
-
-# If not in base tokens, check theme-specific tokens
-grep -ri "743dcd" node_modules/@laioutr-core/ui-tokens/src/figma/theme.*.tokens.json
+# Case-insensitive; prints the matching custom property, e.g. `--laioutr-purple-11: #743dcd;`
+grep -i "743dcd" node_modules/@laioutr-core/ui-tokens/dist/*.css
 ```
 
-(Path layout assumes npm/yarn; pnpm users adjust to `node_modules/.pnpm/.../@laioutr-core/ui-tokens/...`.)
+(`node_modules/@laioutr-core/ui-tokens` resolves through pnpm's symlink as well.)
 
-1. If found, trace the JSON path to derive the CSS variable name using the conversion rules above
-2. If NOT found in any token file, flag it to the user -- hardcoded colors are almost always a mistake
+1. If found, that is the palette token. Semantic tokens point at it by `var()` — grep for the property name (`grep -h -- '--laioutr-purple-11)' node_modules/@laioutr-core/ui-tokens/dist/*.css` finds `--primary-11` and `--promotion-11`) and pick the one the Figma variable name corresponds to.
+2. If NOT found in any file, flag it to the user -- hardcoded colors are almost always a mistake
 
 ## Verifying Tokens Against Source Code
 

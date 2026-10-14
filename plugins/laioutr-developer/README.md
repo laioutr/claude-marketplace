@@ -11,7 +11,7 @@ reviews", Claude will:
 - Search the official Laioutr docs through an MCP server before guessing
   at prop names, package surfaces, or schema fields.
 - Apply Laioutr conventions automatically — the `defineSection` schema
-  shape, the `@laioutr-core/ui-kit` vs `ui` vs `ui-app` layering,
+  shape, the `@laioutr-core/ui-kit` vs `ui` vs `@laioutr-app/ui` layering,
   the `--z-index-*` token discipline.
 - Follow a structured Figma-to-component workflow that decomposes a
   design into a component hierarchy and an API spec before writing any
@@ -24,16 +24,30 @@ reviews", Claude will:
 This plugin ships through the public Laioutr marketplace at
 [`laioutr/claude-marketplace`](https://github.com/laioutr/claude-marketplace).
 
-```bash
-# Add the marketplace (once per machine)
-claude /plugin marketplace add laioutr/claude-marketplace
+Open Claude Code and type these as slash commands inside the session
+(`/plugin` is a slash command, not a `claude` CLI subcommand):
 
-# Install the plugin
-claude /plugin install laioutr-developer@laioutr
+```text
+/plugin marketplace add laioutr/claude-marketplace
+/plugin install laioutr-developer@laioutr
 ```
 
-After installing, run `/reload-plugins` (or restart Claude Code) so the
-skills, rules, and MCP server pick up.
+The first line is needed once per machine. After installing, run
+`/reload-plugins` (or restart Claude Code) so the skills, references, and
+MCP server pick up.
+
+### Updating
+
+The marketplace catalog does not refresh on its own. To pull a new
+version, refresh it and re-run the install, then `/reload-plugins`:
+
+```text
+/plugin marketplace update laioutr
+/plugin install laioutr-developer@laioutr
+```
+
+To refresh automatically, open `/plugin`, switch to the **Marketplaces**
+tab, and turn on auto-update for `laioutr`.
 
 ### Try it out
 
@@ -55,15 +69,18 @@ To force a specific skill regardless of phrasing, use
 
 ### Other install paths
 
-```bash
-# From a local checkout, for development
-claude /plugin install /path/to/claude-marketplace/plugins/laioutr-developer
+```text
+# From a local checkout, for development (inside a Claude Code session)
+/plugin marketplace add /path/to/claude-marketplace
+/plugin install laioutr-developer@laioutr
 ```
 
 ## Requirements
 
 - Claude Code 2.x with plugin support (`/plugin` command available).
-- Node 20+ and pnpm or npm for the storefronts you're working on.
+- Node 22.12+ (current LTS, Node 24, recommended) and pnpm 10+ for the
+  Laioutr projects you're working on — an older Node leaves the dev server
+  hanging.
 - Outbound HTTPS to `https://docs.laioutr.com` so the docs MCP server can
   connect.
 
@@ -79,7 +96,7 @@ helper that hard-codes `€`.
 
 **After:** Claude reads
 `skills/laioutr-platform/references/money-currency-code.md`, picks the
-canonical `Money` type from `@laioutr-core/canonical-types`, and uses the
+canonical `Money` type from `@laioutr-core/core-types/common`, and uses the
 storefront's locale-aware formatter — no homegrown currency math.
 
 ---
@@ -104,7 +121,7 @@ Claude guesses or suggests forking from npm.
 **After:** Claude opens
 `skills/laioutr-platform/references/three-layer-architecture.md` and
 walks the ladder: prop override → local override component in your
-module → fork from `laioutr/ui-source` → upstream issue. Forking is
+module → fork from `laioutr-ui/ui-kit` (or `laioutr-ui/ui` for licensed users) → upstream issue. Forking is
 explicit and documented, not a last resort whispered between developers.
 
 ## What this plugin ships
@@ -113,10 +130,10 @@ explicit and documented, not a last resort whispered between developers.
   detects Laioutr work in your prompt (mentions of Laioutr,
   `@laioutr-core/*`, `defineSection`, `defineBlock`, Orchestr handlers,
   etc.). Carries the platform overview, the discovery-surface table
-  (docs MCP / Storybook / ui-source), the Orchestr handler reference,
-  commit conventions, and the trigger index for the cross-cutting
-  conventions in `references/`.
-- **`skills/laioutr-platform/references/`** — 24 read-on-demand
+  (docs MCP / Storybook / the `laioutr-ui` source repos), the Orchestr handler reference
+  (handler kinds, tokens, builders, gotchas), and the trigger index for
+  the cross-cutting conventions in `references/`.
+- **`skills/laioutr-platform/references/`** — 36 read-on-demand
   convention files (includes `three-layer-architecture.md`). The
   filename prefix encodes the role the convention applies to
   (`ui-kit-*` for atom-style primitives, `ui-*` for organisms, no
@@ -129,7 +146,9 @@ explicit and documented, not a last resort whispered between developers.
 
   | Skill | Triggers on | What it carries |
   | --- | --- | --- |
-  | `writing-section-block-definitions` | `defineSection` / `defineBlock`, schema fields, `Block*.vue` naming | Sidebar group order, canonical field names, forbidden-name list, `if` operators, factory literal-type discipline, `defineSelectOptions` rules — plus 6 reference files |
+  | `writing-section-block-definitions` | `defineSection` / `defineBlock`, schema fields, `Block*.vue` naming | Sidebar group order, canonical field names, forbidden-name list, `if` operators, the per-field-type runtime contract, factory literal-type discipline, `defineSelectOptions` rules — plus 14 reference files (query fields, mutations, tracking, AI metadata, sizing, text styling, …) |
+  | `designing-entity-components` | Defining entity types or `defineEntityComponentToken` components, link tokens, CMS form behavior | Research method, splitting rules, links between entities, value types and code systems, CMS form — plus 4 reference files |
+  | `designing-action-tokens` | Adding or reshaping an action token (`defineActionToken`) | Token-kind decision, canonical first, naming, input/output schemas, error contract — plus 4 reference files |
   | `writing-storybook-stories` | `.stories.ts` authoring, Storybook variants | Meta titles, variant naming, no per-viewport exports, theming checks, refactor workflow |
   | `figma-design-analysis` | Decomposing a multi-component Figma frame (PDP, checkout, full layouts) into a component hierarchy | Frame exploration, component matching, token mapping, themable defaults, subagent orchestration — plus 6 reference files |
   | `figma-component-architecture` | Producing component API specs (props / slots / events / state) from a design plan | Spec format, core architectural constraints, output template — plus 3 reference files |
@@ -196,7 +215,11 @@ developer documentation in-session. Use it for:
 - Section / block schema field types and constraints.
 - CLI commands and the canonical TypeScript types.
 
-Setup details: <https://docs.laioutr.com/getting-started/mcp-server>.
+Setup details: <https://docs.laioutr.com/getting-started/documentation-mcp-server>.
+
+`laioutr-docs` serves documentation only. It is not the authenticated
+Laioutr MCP server for working with your projects' data — that one is
+documented under *Agent API* on the docs site and is set up separately.
 
 The same content is also indexed by Context7 as a fallback when the
 official MCP is unreachable, but prefer the official server when both
@@ -247,10 +270,16 @@ laioutr-developer/
 └── skills/
     ├── laioutr-platform/                    # Auto-loads on Laioutr work
     │   ├── SKILL.md                         # Platform overview + reference index
-    │   └── references/                      # 24 cross-cutting conventions (includes three-layer-architecture)
+    │   └── references/                      # 36 cross-cutting conventions (includes three-layer-architecture)
     ├── writing-section-block-definitions/   # Auto-loads on defineSection / defineBlock work
     │   ├── SKILL.md                         # Overview + quick reference
-    │   └── references/                      # 6 deep-detail files (schema standard, if, factories, naming, …)
+    │   └── references/                      # 14 deep-detail files (schema standard, runtime contract, if, factories, …)
+    ├── designing-entity-components/         # Entity component tokens, links, CMS form
+    │   ├── SKILL.md
+    │   └── references/                      # 4 deep-detail files
+    ├── designing-action-tokens/             # Action tokens: kind, schemas, errors
+    │   ├── SKILL.md
+    │   └── references/                      # 4 deep-detail files
     ├── writing-storybook-stories/           # Auto-loads on .stories.ts work
     │   └── SKILL.md                         # Inline (no extra references)
     ├── figma-design-analysis/               # Figma frame → component hierarchy

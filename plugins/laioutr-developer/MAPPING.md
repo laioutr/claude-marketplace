@@ -4,8 +4,10 @@ Tracks what was carried over from `laioutr/.claude/` and the package-local
 `packages/*/.claude/` folders into this plugin, what was rewritten, and
 what was intentionally excluded.
 
-Final composition: 4 skills, 0 agents, 37 rules (13 top-level + 24
-layer-specific across `ui-kit`, `ui`, `ui-app`), 1 MCP server config.
+Current composition (2026-10-14): 11 skills, 0 agents, 67 read-on-demand
+reference files, 1 MCP server config. The sections below are a history
+of how it got here; **"Re-syncing from the monorepo"** has the current
+source-to-plugin table.
 
 ## Skills
 
@@ -135,41 +137,71 @@ review — they should be updated before the plugin is shipped publicly.
 
 ## Re-syncing from the monorepo
 
-```bash
-SRC=/path/to/laioutr/.claude
-DST=/path/to/claude-plugin-developer
+Every plugin file is a **rewrite** for external app authors, not a copy,
+so re-syncing means porting upstream *changes* by hand. A copy script
+would reintroduce monorepo paths, internal tooling and ticket IDs.
 
-# Skills (same-name copies)
-for s in adr changeset figma-design-analysis figma-to-component \
-         writing-section-block-migration-manifest discoveryjs; do
-  rm -rf "$DST/skills/$s" && cp -r "$SRC/skills/$s" "$DST/skills/"
-done
-# component-architecture is renamed to figma-component-architecture in this plugin
-rm -rf "$DST/skills/figma-component-architecture" \
-  && cp -r "$SRC/skills/component-architecture" "$DST/skills/figma-component-architecture"
-# After copy, update the `name:` frontmatter and pipeline-position strings to
-# match the renamed skill — search for `component-architecture` and rewrite to
-# `figma-component-architecture` except in the output filename suffix
-# `<topic>-component-architecture.md`, which is the document type, not the skill.
-cp "$SRC/skills/json-yaml-tools.md" "$DST/skills/json-yaml-tools/SKILL.md"
+### Procedure
 
-# Agents
-for a in api-documenter architect-reviewer typescript-pro vue-expert \
-         vue-nuxt-expert; do
-  cp "$SRC/agents/$a.md" "$DST/agents/"
-done
+1. Work against **`origin/main`**, never a local checkout: a feature
+   branch can lag by hundreds of commits (`git -C <laioutr> fetch`, then
+   read sources with `git show origin/main:<path>`).
+2. For each row below, list upstream changes since the last sync point
+   (`git log origin/main --since=<date> -p -- <source>`) and port the
+   substantive ones, scrubbed per `CLAUDE.md`.
+3. Find new sources: `git diff --name-status <last-sync> origin/main --
+   .claude/rules .claude/skills 'packages/*/.claude' 'packages/*/CLAUDE.md'`.
+   Triage each against the exclusion lists in this file.
+4. Check the public docs (`laioutr/docs`, `content/`) for the same period —
+   they are the external developer's source of truth and sometimes run
+   ahead of the monorepo rules.
+5. Before writing any import, alias or path, verify it: aliases in each
+   package's `src/module.ts` (`nuxt.options.alias[...]`), auto-imports in
+   its `addImportsDir` / `addServerImportsDir` calls, and the published
+   layout in its `package.json` `files` (packages ship `dist/` only).
 
-# Rules (curated subset — see exclusions in the table above)
-EXCLUDE='worktree-setup.md changeset.md git-reset.md lint-after-ui-changes.md no-intra-package-aliases.md rename-workflow.md'
-for r in "$SRC/rules"/*.md; do
-  name=$(basename "$r")
-  case " $EXCLUDE " in *" $name "*) continue ;; esac
-  cp "$r" "$DST/rules/"
-done
-```
+**Last sync point:** monorepo `origin/main` at `c75d58d8a` (2026-10-14);
+docs repo at `origin/main` `eddff8e` (2026-10-13).
 
-Re-review `CLAUDE.md` manually after each sync — it's a curated rewrite,
-not a copy.
+### Source → plugin
+
+Paths are relative to the monorepo root unless marked `docs:` (the docs
+repo's `content/`) or `~` (the maintainer's user-level skills).
+
+| Plugin file | Source |
+| --- | --- |
+| `laioutr-platform/references/` `boolean-prop-naming`, `component-state-contract`, `no-hardcoded-ui-strings`, `no-wrapper-css-overrides`, `parent-prefix-naming`, `prop-naming-vocabulary`, `public-css-api`, `reactive-value-args`, `reka-ui-wrapper-patterns`, `story-icons-must-exist`, `sub-part-tag-prop-naming`, `surface-tone`, `translations-tl-vs-useLocale`, `unique-component-names`, `vue-script-imports-single-block`, `vue-sfc-cross-package-props` | `packages/ui-kit/.claude/rules/<same name>.md` |
+| `laioutr-platform/references/ui-kit-{css-first-responsive,no-outer-chrome-in-primitives,reka-ui,styling,theming,todo-figma-marker,vue-template-type-casts}` | `packages/ui-kit/.claude/rules/<name without ui-kit- prefix>.md` |
+| `laioutr-platform/references/reka-ui-no-type-leakage` | `packages/ui-kit/.claude/rules/no-reka-ui-type-leakage.md` |
+| `laioutr-platform/references/vue-component-file-structure` | `packages/ui-kit/.claude/rules/component-structure.md` |
+| `laioutr-platform/references/ui-ui-kit-first`, `ui-z-ordering` | `packages/ui/.claude/rules/{ui-kit-first,z-ordering}.md` |
+| `laioutr-platform/references/three-layer-architecture` | `packages/{ui-kit,ui,ui-app}/.claude/rules/package-role.md` + docs: `2.apps/app-development/coding-standards.md` |
+| `laioutr-platform/references/component-state-attributes` | `.claude/rules/component-state-attributes.md` |
+| `laioutr-platform/references/money-currency-code` | `.claude/rules/money-currency-code.md` + docs: `1.frontend/99.api-reference/03.common-types/3.money.md` |
+| `laioutr-platform/references/nuxt-hooks` | `.claude/rules/nuxt-hooks.md` + docs: `1.frontend/2.features/hooks.md` |
+| `laioutr-platform/references/typescript-refactoring` | `.claude/rules/typescript-refactoring.md` |
+| `laioutr-platform/references/app-path-prefixing` | `.claude/rules/app-path-prefixing.md` + docs: coding-standards "Paths and routes" |
+| `laioutr-platform/references/app-settings-manifest` | `.claude/rules/app-settings-are-ui-only.md`, `.claude/rules/connection-settings-need-a-test.md`, `.claude/skills/app-settings-manifest/` + docs: `app-manifest.md`, `releasing-an-app.md` |
+| `laioutr-platform/references/fail-soft-resilience` | `.claude/rules/fail-soft-resilience.md` |
+| `laioutr-platform/references/testing-with-nuxt-context` | `.claude/rules/nuxt-testing-over-abstraction.md` (corrected — see 2026-10-14) |
+| `laioutr-platform/SKILL.md` Orchestr section | docs: `1.frontend/4.Orchestr/`, coding-standards "Orchestr" |
+| `writing-section-block-definitions/references/` `block-naming`, `components-render-without-blocking`, `forbidden-field-names`, `mutations-use-action-tokens`, `per-field-text-styling`, `schema-field-if`, `section-config-standard`, `shared-field-factories`, `shared-field-options` | `packages/ui-app/.claude/rules/<same name>.md` |
+| `writing-section-block-definitions/references/consuming-query-fields` | `packages/ui-app/CLAUDE.md` + docs: `consuming-query-fields.md` |
+| `writing-section-block-definitions/references/sizing` | `packages/ui-kit/.claude/rules/sizing.md` + docs: `sizer.md` |
+| `writing-section-block-definitions/references/tracking-never-degrades-the-page` | `.claude/rules/tracking-never-degrades-the-page.md` |
+| `writing-section-block-definitions/references/ai-metadata` | `.claude/rules/ai-component-metadata.md` + docs: section/block definitions "AI metadata" |
+| `writing-section-block-definitions/references/trust-the-schema-in-components` | plugin-original; verify against `core-types` `getFieldFallback` / `coerceFieldValue` and `frontend-core` `addRenderFallbacks` |
+| `writing-storybook-stories/SKILL.md` | `packages/ui-kit/.claude/rules/{storybook-stories,no-viewport-stories}.md`, `packages/ui/.claude/rules/no-viewport-stories.md` |
+| `designing-entity-components/` | `.claude/skills/designing-entity-components/` + `.claude/rules/entity-component-object-wrapped.md` |
+| `designing-action-tokens/` | `.claude/skills/designing-action-tokens/` |
+| `figma-design-analysis/` | `.claude/skills/figma-design-analysis/` + `~/.claude/skills/figma-design-analysis/` (annotation recipe, Phase 5) |
+| `figma-component-architecture/` | `.claude/skills/component-architecture/` |
+| `figma-to-component/` | `.claude/skills/figma-to-component/` |
+| `figma-export-assets/` | `~/.claude/skills/figma-export-assets/` |
+| `adr/` | `.claude/skills/adr/` |
+
+Re-review `laioutr-platform/SKILL.md` manually after each sync — it is a
+curated rewrite, not a copy.
 
 ## Known internal references in copied content
 
@@ -395,9 +427,10 @@ Net rule count: 31 rules + 1 architecture page = 32 files in
 `skills/laioutr-platform/rules/` (down from 38 + 3 layer `CLAUDE.md`
 files).
 
-Note: `#ui-kit/...`, `#ui/...`, and `#frontend-core` Nuxt aliases are
-public API surface of the upstream packages, not monorepo-internal
-paths — they may appear in rules and examples freely.
+Note: `#ui-kit/...` and `#ui/...` Nuxt aliases are public API surface of
+the upstream packages, not monorepo-internal paths — they may appear in
+rules and examples freely. (This note originally also listed
+`#frontend-core`; that alias does not exist — see the 2026-10-14 section.)
 
 ## Architecture migration (skill-first)
 
@@ -620,3 +653,126 @@ Scrubs applied to all four:
   reference softened to "only a few upstream components moved"; broken
   link to the excluded `rename-workflow.md` replaced with an inline
   summary of the rename touchpoints.
+
+## Re-sync and docs audit (2026-10-14)
+
+Audited the plugin against monorepo `origin/main` and the public docs
+repo, then fixed it. Every API, alias and path below was checked against
+source or the published `0.68.x` packages.
+
+**Factual errors fixed (these made Claude write code that fails):**
+
+- `#frontend-core` does not exist. `defineSection`, `defineBlock` and
+  `definitionToProps` are frontend-core auto-imports from `#imports`. The
+  alias had been recorded as public in this file and in `CLAUDE.md`.
+- `@laioutr-core/ui-app` does not exist; `packages/ui-app` publishes as
+  `@laioutr-app/ui`, and the define helpers are not in it.
+- The section example and `three-layer-architecture.md` now follow the
+  docs: `definition` exported from a plain `<script>`, props from
+  `defineProps(definitionToProps(definition))`, files in
+  `src/runtime/app/{components,sections,blocks}/`, tokens in
+  `src/runtime/shared/tokens/`, public assets in
+  `src/runtime/app/public/app-<name>/`.
+- `trust-the-schema-in-components.md` was rebuilt on the real contract: a
+  field's `default` only pre-fills Studio; Frontend Core fills unset
+  props per field type (`getFieldFallback`), so `number` / `icon` /
+  `color` / `media` / `link` / `query` can be `undefined` whatever their
+  `default`, and pickers fall back to their **first** option. Its
+  `LinkValue` / `resolveLink` / `media?.url` / `link.targetId` examples
+  named APIs and fields that don't exist. Pressure-tested with a subagent.
+- `defineSelectOptions`, `defineField`, `defineFieldset` are not exported
+  by any package — each app defines them in `shared-fields/`. A static
+  shared field must use the local `defineField` (or `as const
+  satisfies`): plain `satisfies StudioFieldDefinition` widens `name`, which
+  collapses the component's props into a `string` index signature
+  (checked with TS 5.8 against `core-types` 0.68.1; the docs' guide shows
+  the broken form).
+- Cache config is `{ ttl }` or `{ ttl, swr: true, staleMaxAge }`; `strategy`
+  was removed.
+- Smaller: `select_radio` → `radio`; `content_alignment` falls back to
+  `'center-center'`; reserved field names gained `slots`, `refFor`,
+  `refKey` and lost `name` / `id` / `default`; `IconName` comes from
+  `#ui-kit/types`; `themeMedia` / `themeResponsiveMedia` signatures;
+  `strawberry-field` theme removed; `OnBackground` → `OnSurface` /
+  `useSurfaceTone`; `Lui` prefix → `L`; installed-package search paths
+  use `dist/` (packages ship no `src/`); token grep uses
+  `ui-tokens/dist/*.css`; `ui` has no `organism/` folder; Section/Block
+  names must be unique across all installed apps.
+
+**Carried over from the monorepo (rewritten for app authors):**
+`translations-tl-vs-useLocale` (restored — dropped by accident in
+`3fdfad8`), `reactive-value-args`, `component-state-attributes`,
+`app-path-prefixing`, `app-settings-manifest`, `fail-soft-resilience`,
+`testing-with-nuxt-context`, `components-render-without-blocking`,
+`mutations-use-action-tokens`, `tracking-never-degrades-the-page`,
+`ai-metadata`, `sizing`, `per-field-text-styling`,
+`consuming-query-fields`; updates to `nuxt-hooks`, `public-css-api`,
+`component-state-contract`; `designing-entity-components` retargeted at
+app modules and split into references (incl.
+`entity-component-object-wrapped`); new skill `designing-action-tokens`;
+the Figma annotation recipe and active gap-closing from the user-level
+`figma-design-analysis`.
+
+**Corrected while porting (monorepo source was wrong):**
+
+- `nuxt-testing-over-abstraction` says to mock `#app` instead of
+  `#imports`; `vi.mock('#app')` does not reach auto-imported code. The
+  plugin teaches `mockNuxtImport` from `@nuxt/test-utils/runtime`.
+- `entity-component-object-wrapped` names one exception; there are about
+  a dozen legacy unwrapped components — listed as shapes not to copy.
+- `designing-action-tokens`: stale `cart/add-items` shape, a
+  non-existent `wishlist/add-items`, the old `z.string() as z.ZodType`
+  WellKnown cast, "errors always extend `@ebec/http`", and the
+  download-type note.
+- `sizing`: "only Blocks wrap in `<Sizer>`" no longer holds.
+
+**Excluded (Cockpit, Cloud, internal process):** `public-api-openapi`,
+`observability`, `frontend-event-legal-scope`,
+`legal-responsibility-boundary`, `laioutr-locator`, `zod-schemas`,
+`code-comments`, `no-design-doc-references`, `one-place-per-domain-value`,
+`no-customer-names`, `no-component-tests`, `no-token-tests`,
+`no-zod-schema-tests`, `core-changes-are-extension-points`,
+`value-lists-in-manifest`, `plugin-schema`, all access / audit / billing /
+partner / tenant / cloud / CLI / database rules, the workflow rules
+(changesets, CI, worktrees, subagents, Jira, videos), and the
+Cockpit/Cloud/ops skills. New on `origin/main` and excluded:
+`agents-come-from-the-marketplace`, `ai-agents-depend-on-ai-plugin`,
+`dry-and-object-design`, `every-call-earns-its-place`,
+`general-practices`, `how-rules-are-written`,
+`larry-copilot-orchestrates`, `no-status-labels-in-videos`,
+`old-role-tables-are-legacy`, `query-count-does-not-grow-with-data`, the
+`ai-agents-and-knowledge` skill.
+
+**Deferred:**
+
+- `adding-event-tokens` — its monorepo skill describes `defineEventToken`
+  / `registerEventTokens`, which never shipped (the API is
+  `defineAnalyticsEventToken`). Fix upstream before carrying.
+- `orchestr-initware-audience` (new on `origin/main`: `extendRequest`
+  receives `audience: 'visitor' | 'shared'` and must add nothing
+  visitor-specific for `shared`) — relevant to connector authors, but not
+  yet in the public docs or a release this audit could confirm.
+- `private-apps` skill — mostly Cockpit internals; its publish → list →
+  add → deploy path may deserve a short app-author reference.
+- ~~`laioutr/ui-source`~~ — resolved: it is replaced by
+  `github.com/laioutr-ui/ui-kit` (public) and `github.com/laioutr-ui/ui`
+  (licensed users). All fork and issue pointers now name those; where the
+  `ui` repo is out of reach, the plugin points at the installed `.vue`
+  sources under `node_modules/@laioutr-core/ui/dist/runtime/`.
+- `section-config-standard.md` keeps `captionStyle` (as the docs guide
+  does), although Laioutr UI moved to `captionVariant` in 2.2.1.
+- `laioutr-platform/SKILL.md` grew to ~270 lines (Orchestr building
+  blocks, gotchas, more topic links). Still under the 500-line ceiling;
+  move the Orchestr detail into a reference if it grows further.
+- Behaviour tests run on this pass (subagent reads only the skill under
+  test, does a realistic task, grades against a verified key): trust-the-
+  schema section; shared fields with a real `tsc` check against the
+  published 0.68 packages; an Orchestr connector from the platform skill;
+  an action token; an entity model; the Figma annotation recipe on a
+  fixture with all annotation forms. Each exposed gaps that were fixed
+  (required `slots`, the `Design` fieldset's `info` dividers, token
+  namespacing, `orchestrDirs`, cache units, the recipe dropping a second
+  annotation category on one element, designer-note category, link and
+  date-type wording). The entity and action skills also passed a
+  description-only trigger test. Not done: a RED baseline against the
+  pre-edit skills.

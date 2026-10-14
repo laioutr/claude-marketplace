@@ -1,6 +1,6 @@
 # Block Naming
 
-Naming convention for `Block*.vue` components in your module (typically `src/runtime/app/block/`, plus any section-colocated blocks).
+Naming convention for `Block*.vue` components in your module (typically `src/runtime/app/blocks/`, plus any section-colocated blocks).
 
 ## The rule
 
@@ -36,7 +36,7 @@ export const definition = defineBlock({
 | `ProductDetailCartButton` | `BlockProductDetailCartButton.vue` |
 | `LightboxGallery`         | `BlockLightboxGallery.vue`         |
 
-If the block wraps a layout that no upstream `@laioutr-core/ui` component provides, follow the resolution ladder in [`three-layer-architecture.md`](../../laioutr-platform/references/three-layer-architecture.md) (prop override → local custom organism → fork from `laioutr/ui-source` → upstream issue) and name the block after whichever component it ends up wrapping.
+If the block wraps a layout that no upstream `@laioutr-core/ui` component provides, follow the resolution ladder in [`three-layer-architecture.md`](../../laioutr-platform/references/three-layer-architecture.md) (prop override → local custom organism → fork from `laioutr-ui/ui-kit` or `laioutr-ui/ui` → upstream issue) and name the block after whichever component it ends up wrapping.
 
 ## Non-standalone blocks
 
@@ -53,4 +53,4 @@ These three are independent:
 - **Filename + `component` string** — `BlockProductDetailCartButton` (developer-facing, must match)
 - **`studio.label`** — `'Add to Cart'` (editor-facing, plain English/Deutsch, no `Block` prefix)
 
-Editors never see the `Block` prefix; it's a developer-facing namespace marker.
+Editors never see the `Block` prefix. It is a namespace marker: Sections and Blocks from every installed app share one global component registry, and a duplicate name silently overwrites the other app's component. Keep the prefix, and make the rest of the name specific enough to be unique across the project (see `unique-component-names.md` in the `laioutr-platform` skill).

@@ -1,161 +1,143 @@
-# Trust the Schema in Components
+# Trust the Field-Type Contract in Components
 
-Frontend-core normalizes every schema field before it reaches the component. A field with `default: X` arrives already populated; picker-shaped fields additionally arrive as one of the declared options; and `object` / `array` fields are *always* materialized — `{}` with sub-fields recursively populated, or `[]` — never `null` or `undefined`, with or without a `default`. The component must trust that contract — no `?? 'fallback'`, no `?? {}`, no `?? []`, no `withDefaults`, no optional `?` on the prop, no `includes()`-narrowing helper, no `v-if` to guard the prop's existence.
+Type a Section's or Block's props with `defineProps(definitionToProps(definition))`, never by hand, and use each prop the way its **field type** guarantees. Frontend Core fills every unset prop with its field type's fallback before render. `text`, `textarea`, `richtext`, `checkbox`, the pickers (`select`, `radio`, `toggle_button`, `content_alignment`), `object` and `array` always arrive with a value, so write no `??`, no optional chaining, no `withDefaults` and no `includes()`-narrowing for them. `number`, `icon`, `color`, `media`, `link` and `query` can arrive as `undefined`, and `json` as `null` — guard those.
 
-## The rule
+A field's `default` is **not** part of this contract. Studio writes the `default` once, when an editor adds the section to a page. A section placed before the field existed, or one whose value was cleared, gets the field type's fallback instead.
 
-A schema field defined with `default: X` is **always present** at the component. **Picker-shaped fields** — `select`, `toggle_button`, `content_alignment`, `select_radio`, `checkbox`, and any other Studio control that emits from a closed value set — are additionally **always one of the declared values**.
+## The contract
 
-**`object` fields** are always materialized as a plain object whose declared sub-fields are each populated by their own field-type contract — picker children at their default, `text` children at `''`, nested `object` children recursed, nested `array` children at `[]`. The contract is structural: it holds whether or not the `object` field itself declares a `default`. Emptiness lives one level down, at the leaves.
+| Field type | Value when unset | Prop type from `definitionToProps` |
+| --- | --- | --- |
+| `text`, `textarea`, `richtext` | `''` | `string`, required |
+| `checkbox` | `false` — `true` for a visibility decorator (`as: 'visibility'`) | `boolean`, required |
+| `select`, `radio`, `toggle_button` | the **first option's** value. A stored value outside the options is clamped to the first option too | union of the option values, required |
+| `content_alignment` | `'center-center'` (`axis` unset or `'both'`); `'center'` for `axis: 'vertical'` or `'horizontal'` | `` `${'top' \| 'center' \| 'bottom'}-${'left' \| 'center' \| 'right'}` ``, or the single-axis union, required |
+| `object` | an object whose sub-fields are each filled by these same rules | the object shape, required |
+| `array` | `[]`. Each stored item carries an `id` and its sub-fields are filled by these same rules | `T[]`, required |
+| `number`, `icon`, `color`, `media`, `link`, `query` | `undefined` | optional (`… \| undefined`) |
+| `json` | `null` | optional |
 
-**`array` fields** are always materialized as an array — possibly `[]`, but never `null` or `undefined`. Same structural guarantee: it does not depend on a `default`. Type the prop as `T[]` and iterate directly; if you need an empty-state branch, check `.length`.
+`definitionToProps` already encodes this table: the always-filled types come out required, the rest optional. Declaring the props yourself throws that away and invites a `?` or a fallback the runtime never needs.
 
-Type the prop as the exact literal union (pickers), exact object shape (objects), or `T[]` (arrays). Use it directly. Defensive code that re-checks these guarantees encodes states that cannot reach runtime.
+## Required
 
-```ts
-// ✅ Schema
-{ name: 'background', type: 'select',
-  options: defineSelectOptions(['none', 'pale', 'solid']),
-  default: 'none' }
+```vue
+<script lang="ts">
+import { defineSection, definitionToProps } from '#imports';
 
-// ✅ Component
-interface Props {
-  background: 'none' | 'pale' | 'solid'  // required, exact union
-}
-const props = defineProps<Props>()       // no withDefaults
-const bgClass = {
-  none:  '',
-  pale:  'hero--bg-pale',
-  solid: 'hero--bg-solid',
-}[props.background]                      // exhaustive record lookup, no fallback
+export const definition = defineSection({
+  component: 'SectionPromo',
+  studio: { label: 'Promo' },
+  slots: [],
+  schema: [
+    {
+      label: 'Content',
+      fields: [
+        { type: 'text', name: 'heading', label: 'Heading' },
+        { type: 'media', name: 'media', label: 'Media' },
+        { type: 'link', name: 'link', label: 'Link' },
+        {
+          type: 'array',
+          name: 'items',
+          label: 'Items',
+          schema: [{ fields: [{ type: 'text', name: 'label', label: 'Label' }] }],
+        },
+      ],
+    },
+    {
+      label: 'Design',
+      fields: [
+        { type: 'info', name: 'stylingDivider', label: 'Styling' },
+        {
+          type: 'select',
+          name: 'background',
+          label: 'Background',
+          default: 'none',
+          options: [
+            { label: 'None', value: 'none' },
+            { label: 'Pale', value: 'pale' },
+            { label: 'Solid', value: 'solid' },
+          ],
+        },
+        { type: 'info', name: 'layoutDivider', label: 'Layout' },
+        { type: 'number', name: 'columns', label: 'Columns', default: 3 },
+      ],
+    },
+  ],
+});
+</script>
+
+<script setup lang="ts">
+const props = defineProps(definitionToProps(definition));
+
+// ✅ select: always one of the options — exhaustive lookup, no fallback
+const bgClass = computed(() => ({ none: '', pale: 'promo--pale', solid: 'promo--solid' })[props.background]);
+// ✅ number: really can be undefined, whatever `default` says — a fallback is correct here
+const columns = computed(() => props.columns ?? 3);
+</script>
+
+<template>
+  <section :class="['promo', bgClass]" :style="{ '--promo-columns': columns }">
+    <!-- ✅ text is '' when unset: test the value, not the prop's existence -->
+    <h2 v-if="heading">{{ heading }}</h2>
+    <!-- ✅ media and link can be undefined: guard them -->
+    <LMedia v-if="media" :media="media" />
+    <NuxtLink v-if="link" :to="linkResolver.resolve(link)">More</NuxtLink>
+    <!-- ✅ array is always an array: branch on .length -->
+    <ul v-if="items.length">
+      <li v-for="item in items" :key="item.id">{{ item.label }}</li>
+    </ul>
+  </section>
+</template>
 ```
 
-```ts
-// ✅ Schema — object + array
-{ type: 'object', name: 'headingStyle', schema: [{ fields: [
-  { type: 'select', name: 'headingAs',
-    options: defineSelectOptions(['h1', 'h2', 'h3']), default: 'h2' },
-] }] },
-{ type: 'array',  name: 'informationLinks', schema: [{ fields: [
-  { type: 'text', name: 'label' },
-  { type: 'link', name: 'href' },
-] }] }
+`LMedia` (and `LIcon`, which takes an icon value as its `name` prop) are ui-kit auto-imports; `linkResolver` and `useResolvedLink` are Frontend Core auto-imports. Outside a template or `computed()`, resolve a link with `useResolvedLink()` rather than a bare `linkResolver.resolve()`, so it reacts to locale changes and link-resolver hooks.
 
-// ✅ Component
-interface Props {
-  headingStyle:     { headingAs: 'h1' | 'h2' | 'h3' }            // never optional
-  informationLinks: { label: string; href: LinkValue }[]         // T[], not T[] | undefined
-}
-const props = defineProps<Props>()
-// Direct access on the object, direct iteration on the array.
-// Inner `label` text may be '' — guard at the leaf, not at the prop.
-const items = computed(() =>
-  props.informationLinks.map(l => ({ label: l.label, href: resolveLink(l.href) })),
-)
+## Forbidden
+
+```ts
+// ✘ Hand-declared props — loses the derived optionality and invites the patterns below
+interface Props { background?: 'none' | 'pale' | 'solid' }
+const props = withDefaults(defineProps<Props>(), { background: 'none' });
+
+// ✘ Fallback on a picker — the value is always one of the options
+const bg = props.background ?? 'none';
+
+// ✘ Runtime narrowing for an impossible off-list value
+const safeBackground = computed(() =>
+  (['none', 'pale', 'solid'] as const).includes(props.background) ? props.background : 'none',
+);
+
+// ✘ Fallback or optional chaining on an array or object prop
+const labels = (props.items ?? []).map((item) => item.label);
+props.items?.map((item) => item.label);
+
+// ✘ Assuming `default` fills a number, icon, color, media or link field — it doesn't
+const columns: number = props.columns; // can be undefined even with `default: 3`
+
+// ✘ Guarding media or link on fields they don't have
+// `Media` has no `url`, and `Link` is a union of reference / url / anchor / page / pageType with no `targetId`
+v-if="media?.url"
+v-if="link.targetId"
 ```
 
 ## Why
 
-A defaulted picker-shaped field carries two guarantees and one type benefit:
+1. **Frontend Core fills the prop, not Studio.** Before render it walks the schema and replaces every missing value with `getFieldFallback(field)`, then clamps picker values onto their options. That is the only guarantee there is, and it is per field type. `default` only pre-fills Studio's form at creation time, so code that relies on it breaks for every section placed before the field was added.
+2. **A picker's fallback is its first option, not its `default`.** The code is safe either way — the value is always a valid option. The visible difference appears when you add a picker to a Section or Block that is already placed on pages: those instances render the **first option**, new ones the `default`. Keep options in their natural order (`s`, `m`, `l`) as upstream does; when adding a picker to a component already in use, decide which option existing pages should get, and make that the first option or the `default` accordingly.
+3. **Exact types keep exhaustiveness checks working.** A required `'none' | 'pale' | 'solid'` lets the compiler flag a missing branch when an option is added. A `?` or a fallback widens the type and turns that check off.
+4. **Defensive code for impossible states hides the contract.** Each unreachable `??` tells the next reader the value might be missing, and the pattern gets copied into components where it hides real bugs.
+5. **The types that can be absent really can be.** `number`, `icon`, `color`, `media`, `link` and `query` fall back to `undefined`, whatever their `default` says. Skipping their guard is the opposite mistake, and it crashes at render.
 
-1. **Always present.** Frontend-core fills in the default whenever the author didn't pick one in Studio.
-2. **Always one of the options.** Every Studio picker — `select`, `toggle_button`, `content_alignment`, `select_radio`, `checkbox` — emits only values from the declared option set. There is no "free text" path that could produce something off-list. `checkbox` is the degenerate case: the option set is `true | false`.
-3. **Exact literal type.** Encoding the union as `'none' | 'pale' | 'solid'` (or `'top-left' | 'top-center' | …` for `content_alignment`) lets the TypeScript compiler enforce exhaustive `switch` and complete record lookups. The moment you widen the union with `?` or a fallback, exhaustiveness checks silently degrade.
-4. **Structural materialization for `object` and `array`.** Frontend-core's prop-normalization step fills every `object` field with a fresh `{}` whose sub-fields are recursively populated by the same `getFieldFallback` machinery, and every `array` field with `[]`. There is no code path that delivers `undefined` or `null` for these shapes. The component receives the full structural skeleton; only leaf values inside can be "empty" by their own field type's rules.
+## Red flags — stop and check the table
 
-Defensive fallbacks pretend the picker can emit garbage, or that the runtime forgot to materialize an object or array. They bloat the component with computed-property indirection, hide the schema contract from anyone reading the component, and make exhaustive-switch checking impossible.
+- About to write `interface Props` or `withDefaults` for a Section or Block — use `definitionToProps`.
+- About to write `?? 'x'`, `?? []`, `?? {}` or `?.` on a `text`, picker, `checkbox`, `object` or `array` prop.
+- About to write a `safeX` computed or an `includes()` check on a picker value.
+- About to drop the `v-if` on a `media`, `link`, `icon`, `color`, `number` or `query` prop because its field has a `default`.
+- About to add a picker to a Section or Block already placed on pages without deciding what those pages get (the first option, not the `default`).
 
-## Forbidden patterns
+## Related
 
-```ts
-// ✘ Runtime narrowing for impossible values
-const safeVariant = computed<Variant>(() =>
-  (['center', 'split'] as readonly string[]).includes(props.variant)
-    ? props.variant
-    : 'center',
-)
-
-// ✘ withDefaults re-asserting the schema default
-const props = withDefaults(defineProps<Props>(), {
-  background: 'none',  // schema already defaults to 'none'
-  variant: 'center',   // schema already defaults to 'center'
-})
-
-// ✘ Optional prop typing on a schema-defaulted field
-interface Props {
-  variant?: 'center' | 'split'  // schema guarantees presence — drop the `?`
-}
-
-// ✘ Nullish coalescing on a defaulted field
-const size = props.size ?? 'm'        // ?? branch is unreachable
-class={`hero--bg-${props.background ?? 'none'}`}  // same — unreachable
-
-// ✘ "Just in case" branch for an off-list value
-if (props.background !== 'none' && props.background !== 'pale'
-    && props.background !== 'solid') {
-  return  // can't happen — value is always one of the three
-}
-
-// ✘ Nullish coalesce on an array prop
-const items = (props.informationLinks ?? []).map(...)   // ?? branch unreachable
-
-// ✘ Optional chaining on an array prop
-props.informationLinks?.map(...)                        // the prop is always an array
-
-// ✘ Optional prop typing on an object or array field
-interface Props {
-  headingStyle?:     { headingAs: 'h1' | 'h2' | 'h3' }   // drop the `?`
-  informationLinks?: { label: string; href: LinkValue }[] // drop the `?`
-}
-
-// ✘ withDefaults re-asserting the structural fallback
-const props = withDefaults(defineProps<Props>(), {
-  headingStyle:     () => ({ headingAs: 'h2' }),         // runtime already does this
-  informationLinks: () => [],                            // runtime already does this
-})
-
-// ✘ Nullish coalesce on an object prop
-const style = props.headingStyle ?? { headingAs: 'h2' } // ?? branch unreachable
-
-// ✘ v-if guarding existence of an object or array prop
-<MyChild v-if="props.headingStyle" ... />               // it is always present
-<ul v-if="props.informationLinks">…</ul>                // use v-if="links.length" if you need an empty-state branch
-```
-
-## When the value really can be absent
-
-The "always materialized" guarantee for `object` / `array` and the "always present + on-list" guarantee for defaulted picker fields don't extend to every field type. **Leaf fields** without a `default` arrive empty-but-materialized:
-
-| Field | Empty case |
-| --- | --- |
-| `text` / `textarea` / `richtext` with no `default` | Author left the input blank → empty string |
-| `media` | Author hasn't picked an asset → empty media object |
-| `link` | Author hasn't picked a target |
-| `query` | No data source bound |
-
-For these, normal guarding (`v-if="heading"`, `v-if="media?.url"`, `v-if="link.targetId"`) is correct. Note that even `media` and `link` are themselves materialized as objects — only their *contents* are empty.
-
-**`object` and `array` fields are never absent.** Emptiness lives one level down: guard the inner leaves, never the object or array prop itself. For an array, `v-if="props.items.length"` is the right shape if you need an empty-state branch; `v-if="props.items"` is wrong because the array is always there.
-
-## Red flags — STOP and trust the schema
-
-Each of these means: delete the defensive code.
-
-- About to write `?? 'something'` on a prop whose schema field has a `default`
-- About to write `?? []` or `?? {}` on an `array` or `object` prop
-- About to write `props.someArray?.map(...)` or `props.someObject?.foo` to "be safe"
-- About to add `withDefaults` for a field that already has a schema `default`, or for any `object` / `array` field
-- About to type a schema-defaulted prop with `?`, or to type an `object` / `array` prop as optional
-- About to write `v-if="props.someArray"` or `v-if="props.someObject"` to guard the prop's existence (use `.length` if you need an empty-state branch)
-- About to write `if (props.x === 'unexpected')` for a value not in `options`
-- About to write a `safeX` computed wrapping a schema-defaulted prop
-- About to add a `try/catch` or `console.warn` for an "unknown variant" branch
-
-If the answer is "but what if the value is missing/invalid?" — re-read §Why. It cannot be. The schema contract is the type contract.
-
-## How this surfaces if you ignore it
-
-- **Unreachable branches** in coverage reports and linter output.
-- **Degraded exhaustive checks**: `case 'none'` / `case 'pale'` / `case 'solid'` / `default:` becomes the only place an off-list value could land, but that off-list value cannot exist, so the `default` branch is dead code that prevents the compiler from telling you when a new option was added but a handler was forgotten.
-- **Drift between schema and component**: someone renames an option in `section.ts`; the fallback in the component still references the old name, no error.
-- **Reader confusion**: the next developer assumes the picker can emit garbage and copies the pattern to other components.
+- [`schema-field-if.md`](./schema-field-if.md) — the same fallbacks decide what an `if` expression sees for an unset field.
+- [Schema fields — default values and runtime fallbacks](https://docs.laioutr.com/apps/app-development/schema-fields) — the docs' version of the contract table.

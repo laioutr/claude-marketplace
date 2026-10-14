@@ -26,7 +26,7 @@ import type { PrimitiveProps } from 'reka-ui';
 
 defineProps<
   PrimitiveProps & {
-    brightness?: BackgroundBrightnessInput;
+    tone?: SurfaceTone;
   }
 >();
 ```
@@ -35,13 +35,13 @@ defineProps<
 // ✅ Local interface, identical runtime behavior
 import type { Component } from 'vue';
 
-export interface OnBackgroundProps {
+export interface OnSurfaceProps {
   as?: string | Component;
   asChild?: boolean;
-  brightness?: BackgroundBrightnessInput;
+  tone?: SurfaceTone;
 }
 
-defineProps<OnBackgroundProps>();
+defineProps<OnSurfaceProps>();
 ```
 
 For wrappers that pass props through with `v-bind`, narrow the public type to the fields that are _actually meant to be configured by consumers_. Anything the wrapper hardcodes or controls itself should not appear in the local interface, even if reka-ui's type lists it.
@@ -79,7 +79,7 @@ For indexed accesses like `TooltipArrowProps['width']`, replace with the resolve
 Before shipping a component that wraps reka-ui, grep its file:
 
 ```sh
-rg "from 'reka-ui'" src/runtime/components/<Name>/<Name>.vue
+rg "from 'reka-ui'" src/runtime/app/components/<Name>/<Name>.vue
 ```
 
 For each match, check:

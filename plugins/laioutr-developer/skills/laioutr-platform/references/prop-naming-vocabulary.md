@@ -1,6 +1,6 @@
 # Prop Naming Vocabulary
 
-Use one canonical word per concept. Applies to any component your module ships, and to the upstream `@laioutr-core/ui-kit`, `@laioutr-core/ui`, and `@laioutr-core/ui-app` patterns you mirror.
+Use one canonical word per concept. Applies to any component your module ships, and to the upstream `@laioutr-core/ui-kit`, `@laioutr-core/ui`, and `@laioutr-app/ui` patterns you mirror.
 
 ## Sizes — one scale
 

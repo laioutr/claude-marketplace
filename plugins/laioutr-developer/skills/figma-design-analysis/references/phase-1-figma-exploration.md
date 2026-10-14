@@ -1,6 +1,6 @@
 # Phase 1: Figma Exploration
 
-Detailed mechanics for the first phase of `figma-design-analysis`. Covers MCP failure handling, dev-mode annotations and the jq recovery recipe, discovering component definitions across the three file shapes, capturing per-component Figma links, recognizing variant matrices, and scanning for Jira ticket references.
+Detailed mechanics for the first phase of `figma-design-analysis`. Covers MCP failure handling, enumerating visible-state variant frames, dev-mode annotations (every category, both emitted forms) and the jq recovery recipe, discovering component definitions across the three file shapes, capturing per-component Figma links, recognizing variant matrices, and scanning for Jira ticket references.
 
 ## MCP Failure Handling
 
@@ -8,7 +8,7 @@ The Figma MCP requires the **Figma desktop app** to be open with the target docu
 
 - **"No node could be found"** → Ask the user to open the document in Figma desktop and make it the active tab
 - **Intermittent failures** (some calls succeed, then later calls fail) → The Figma app likely lost focus or switched tabs. Ask the user to re-focus the document. Do NOT discard data from earlier successful calls — work with partial data and note which nodes could not be explored
-- **Timeout or large output saved to file** → Use `grep` on the saved file to extract specific elements (e.g., `<canvas` tags, `<instance` nodes) rather than reading the full file
+- **Timeout or large output saved to file** → Use `rg` (or `jq` for the annotation recipe) on the saved file to extract specific elements (e.g., `<canvas` tags, `<instance` nodes) rather than reading the full file
 
 ## Extracting the Node ID
 
@@ -32,9 +32,32 @@ From URL `https://www.figma.com/design/:fileKey/:fileName?node-id=75-37105`, the
 2. `get_variable_defs` on the same node for token definitions
 3. `get_screenshot` if the visual layout isn't clear from context alone
 
+## Enumerating Visible-State Variant Frames
+
+Designs often have multiple frames at the root level representing different visible states of the same screen — collapsed/expanded, default/active, mobile/desktop, with-results/empty. Each frame renders a different subtree, and **annotations only appear in `get_design_context` output for the frame where the annotated element is actually visible**. Annotations attached to an element that is hidden in one variant never surface in that variant's call.
+
+Before extracting annotations:
+
+1. Enumerate root-level frames whose names share a stem and differ only by a state qualifier (`location detail` vs `location detail - opening times open`, `mobile / search active` vs `mobile / search results`, `LG - laptops - location detail` vs `LG - laptops - location detail - opening times open`).
+2. Call `get_design_context` on **each** variant frame, not just the default. Do not assume "expanded" is "default with an accordion toggled" — Figma represents states as full sibling frames, and the expanded subtree only exists in the expanded frame.
+3. Run the annotation recipe on each saved response and merge the rows.
+
+This is breadth (calling across sibling variant frames). "Drill into each meaningful subgroup" below is depth (calling on leaves within one frame). Both are required — depth alone misses every annotation on hidden subtrees.
+
 ## Extracting Dev-Mode Annotations
 
-`get_design_context` embeds designer annotations in the returned code as `data-development-annotations="..."` attributes on the JSX elements. The MCP appends an explicit warning at the end of every response that contains them: *"Some elements have annotation data attributes... IMPORTANT: Do not ignore these annotation attributes."*
+`get_design_context` embeds designer annotations in the returned code as `data-*-annotations="..."` attributes on the JSX elements.
+
+**There is more than one annotation attribute name.** Figma annotation *categories* each produce their own attribute. Two are confirmed in the wild:
+
+| Attribute | Figma category |
+|---|---|
+| `data-development-annotations` | the default "Development" category |
+| `data-information-for-designers-annotations` | a custom category named "Information for designers" |
+
+A team can create any category, so the set is open-ended: the attribute name is the category name slugified, wrapped as `data-<slug>-annotations`. **Always match `data-[a-z-]*annotations`, never a single literal name** — a recipe hardcoded to `data-development-annotations` silently returns zero rows for every other category and you will conclude "no annotations" while staring at one.
+
+**The MCP's trailing warning is not a per-node signal.** Responses that contain annotations usually end with *"Some elements have annotation data attributes... IMPORTANT: Do not ignore these annotation attributes."* — but this warning has been observed firing for a node whose returned JSX contains **no** annotation attribute at all (it appears to be scoped to the component set or file, not the requested node). So: its presence does not prove there is something to extract, and you still have to run the scan. Treat it as a hint, never as evidence either way.
 
 These annotations are the only place a designer can record information that is not visible in the layer tree, the screenshot, or the variable list:
 
@@ -46,34 +69,62 @@ These annotations are the only place a designer can record information that is n
 | `New Component -> UI Kit` (or `-> Order Summary`) | Package placement or composition target — overrides the default placement heuristic |
 | `... is optional, but at least one is required` | Data-shape contract for a prop |
 | `First Image is always the Location Image also used on the location cards` | Cross-component contract — the same data flows into another component |
+| `Display X in a basic table [https://www.figma.com/design/<other-fileKey>/...]` | URL pointing at a node in a different Figma file — supplementary context the designer recorded. Could be a canonical component definition, a usage example, a related pattern, or background reference. The contents aren't determined until you fetch them — but it always needs investigation, not skipping |
 
 **Section-level `get_design_context` calls return sparse metadata WITHOUT annotations.** Annotations only appear in leaf-level (or near-leaf) calls that return full code. Drill into each meaningful subgroup; do not stop at the section.
 
-**Annotation values can be multi-line** — newlines inside the attribute value are preserved literally.
+**Annotation values can be multi-line.** In the quoted form the newlines come through as real line breaks; in the JSX-expression form they come through as escaped `\n`. Render both as line breaks when you quote the note in the plan.
 
 **Prefer a dedicated annotation tool when available.** Before using the JSX scan recipe below, check whether your MCP exposes a tool whose name contains `annotation` (e.g. `mcp__figma__get_annotations` — Figma's roadmap mentions a dedicated annotations API in development). A structured tool response is more reliable than regex-parsing JSX strings; fall back to the recipe only when no such tool exists.
 
-**Recovery recipe.** Use jq alone — its `scan` regex matches across the JSON envelope and across embedded newlines in one pass, returning structured `[node-id] name: annotation` rows with no surrounding noise:
+**Recovery recipe.** Use jq alone. It splits the JSX at each `data-node-id`, so every element is scanned on its own and an element carrying **several** annotation categories yields one row per category. It returns structured `[node-id] <category-annotations>:` rows (one note value per indented line) with no surrounding noise:
 
 ```bash
 jq -r '
   .[].text
-  | [scan("data-node-id=\"([^\"]+)\"[^>]*?data-development-annotations=\"([^\"]+)\"(?:[^>]*?data-name=\"([^\"]+)\")?"; "g")][]
-  | "[\(.[0])] \(.[2] // "(no name)"):\n  \(.[1] | gsub("\n"; "\n  "))\n"
+  | split("data-node-id=\"")[1:][]
+  | (capture("^(?<id>[^\"]+)").id) as $id
+  | [scan("data-([a-z-]*)annotations=(\"[^\"]+\"|\\{[^}]*\\})")][]
+  | . as $m
+  | ($m[1] | [scan("\"((?:[^\"\\\\]|\\\\.)+)\"")] | map(.[0]) | map(select(. != "undefined"))) as $vals
+  | "[\($id)] <\($m[0])annotations>:\n  " + ($vals | join("\n  ")) + "\n"
 ' /path/to/saved-output.txt
 ```
 
-Works for both MCP response forms: the file form is a JSON array `[{type, text}]` where the JSX is a single JSON-encoded string with `\n` escaped; the inline form returned directly into the conversation has the same shape. The pattern relies on `data-node-id` always preceding `data-development-annotations` in the MCP's emitted JSX (verified). `data-name` is captured opportunistically when present.
+**Two emitted forms — the recipe must handle both.** This is the single most likely way to silently miss an annotation:
 
-For quick ad-hoc inspection, `jq -r '.[].text' file | grep -B 2 -A 10 'data-development-annotations='` also works but returns ~10 lines of unrelated attributes per match.
+| Form | When | Example |
+|---|---|---|
+| Quoted attribute | plain frames | `data-development-annotations="is displayed when the video is paused"` |
+| **JSX expression** | **variant-set components** | `data-development-annotations={size === "s" && state === "start" ? "Default\n\nthe beginning of the animation" : undefined}` |
 
-**Brittleness & sanity check.** The recipe assumes (a) the attribute is named `data-development-annotations`, (b) `data-node-id` precedes it on the same element, (c) values are double-quoted with no escaped `"`. If Figma changes any of those, the recipe silently returns zero rows. After running it, sanity-check with:
+A variant set (`State=Default \| hover \| pressed`, `breakpoint=xs \| s \| …`) renders every variant as conditionals, and its annotations become ternaries. A pattern anchored to `="…"` matches **zero** of them. The alternation `("[^"]+"|\{[^}]*\})` above covers both.
+
+Trade-off to expect: for the expression form the inner scan also returns the ternary's *condition* literals (`"s"`, `"start"`) alongside the real note. Noise is the right failure direction here — the annotation text is normally the longest value in the list. Do not tighten the pattern to suppress it. The condition is not only noise: it says which variant the note applies to (`size === "s" && state === "start"`), so record it as the note's variant scope in the plan.
+
+The `data-([a-z-]*)annotations` group captures **which** category produced each note, so a `development` note and an `information-for-designers` note stay distinguishable in the output. Works for both MCP response forms: the file form is a JSON array `[{type, text}]` where the JSX is a single JSON-encoded string with `\n` escaped; the inline form returned directly into the conversation has the same shape. The pattern relies on `data-node-id` always preceding the annotation attribute in the MCP's emitted JSX (verified). The recipe does not capture `data-name` — take the layer name for each node id from the same response or the `get_metadata` tree when writing the `Designer note` line.
+
+**Inline responses are not persisted.** Only oversized results get written to a tool-results file; anything returned inline exists solely in your context and cannot be re-scanned with jq later. So either run the scan while the response is still fresh, or accept that verifying it later means re-fetching the node. Never claim recipe-level coverage for a response you only read by eye — say which nodes were recipe-verified and which were not.
+
+For quick ad-hoc inspection, `jq -r '.[].text' file | rg -o 'data-[a-z-]*annotations'` lists the category names present. Avoid `grep -o` with large context windows here — some `grep` builds (ugrep) reject wide `.{0,N}` context patterns with "exceeds complexity limits".
+
+**Brittleness & sanity check.** The recipe assumes (a) the attribute matches `data-*-annotations`, (b) `data-node-id` precedes it on the same element, (c) the value is either a double-quoted string or a `{…}` expression containing no nested braces. If Figma changes any of those, the recipe silently returns zero rows.
+
+**The `rg -c 'annotat'` check below is the real safety net** — it is form-agnostic, so it catches quoted values, JSX expressions, and any future syntax alike. A zero there is trustworthy in a way a zero from the structured recipe is not. Always run it. After running the recipe, sanity-check with:
 
 ```bash
-jq -r '.[].text' /path/to/saved-output.txt | grep -ci 'annotat'
+jq -r '.[].text' /path/to/saved-output.txt | rg -c 'annotat'
+jq -r '.[].text' /path/to/saved-output.txt | rg -o 'data-[a-z-]*annotations=' | wc -l
+jq -r '.[].text' /path/to/saved-output.txt | rg -o 'data-[a-z-]+=' | sort -u
 ```
 
-If this finds matches but the recipe returned zero, the output format has changed — visually scan the response for any `data-*annotation*` attribute name (or comment-block / sibling field carrying the notes) and adapt the regex. Do NOT conclude "no annotations exist" unless both the recipe AND this sanity grep return zero.
+Reconcile them:
+
+- **Attribute count = recipe rows.** The second command counts annotation attributes; it must equal the number of `[node-id]` rows the recipe printed. A difference means the recipe missed one — find it before going on.
+- **The line count is a presence check, not a total.** `rg -c` counts *lines*, and the MCP's trailing warning ("Some elements have annotation data attributes…") is one of them, so expect it to exceed the attribute count by one when that warning is present. To see what any other surplus is: `jq -r '.[].text' file | rg 'annotat' | rg -v 'data-[a-z-]*annotations='`.
+- **Format change.** If the first command finds matches but the recipe and the second command return zero, Figma changed the format — inspect the third list for an unfamiliar attribute name and adapt the regex.
+
+A clean zero looks like the third command returning only `data-name=` and `data-node-id=`. Do NOT conclude "no annotations exist" unless the recipe AND all three checks agree.
 
 **For multi-component designs**, do the extraction inside the per-group exploration subagent (see [subagent-orchestration.md](./subagent-orchestration.md)). The 70K+ JSX dump stays in the subagent's context; only the structured annotation list bubbles up.
 
@@ -83,6 +134,7 @@ If this finds matches but the recipe returned zero, the output format has change
 - A `Go to {Page}` annotation on a button or link is a routing contract — reflect it in the component's planned events or props (e.g., a `to: RouteLocationRaw` prop, or a `@click` event the wrapper Section/Block routes).
 - An `optional` annotation means the parent must accept the element as conditional content (slot or boolean prop) — flag it in the modification intent or in the proposed props for the new component.
 - An annotation that names another component (e.g., `also used on the location cards`) implies a shared data contract — verify both components have compatible prop shapes, or surface the gap as an Open Question.
+- An annotation value that contains a URL to a **different Figma file** (different `fileKey`) is supplementary context the designer chose to record. It might be a canonical component definition, a usage example, a related pattern, or background reference — you cannot tell which from the URL alone. Treat it as required reading: the linked node likely carries information (variants, states, intended composition, design rationale) that isn't in the inline render. **When trying to read a Figma reference in a file that's not the active tab, do not defer or proceed without it. Stop, ask the user to open the linked file in Figma desktop, and wait for confirmation before continuing.** Then call `get_design_context` on the linked node and fold what you learn into the analysis.
 
 **Surface every annotation verbatim in the plan** under a structured `Designer note:` line in the Component Hierarchy (see [plan-output-template.md](./plan-output-template.md)). Do NOT fold designer annotations into `Non-obvious:` italic lines — reviewers must be able to distinguish verbatim designer intent from agent inference.
 

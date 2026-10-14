@@ -20,7 +20,7 @@ This reference covers the **themable** image lane only. For one-off images that 
 Look for images that:
 - Serve as backgrounds, illustrations, placeholders, or empty states
 - Would logically change per theme (even if the Figma file only shows one theme)
-- Change depending on background brightness (dark vs light versions) — if the component uses `OnBackground`
+- Change depending on the surface tone the component sits on (light / dark / bright versions) — see `surface-tone.md` in the `laioutr-platform` skill
 - Have different aspect ratios or crops for mobile vs desktop
 
 Even if the Figma file shows only one theme variant, any non-product, non-brand decorative image should be assumed themable. The codebase convention is that ALL such images are theme-provided.
@@ -31,31 +31,36 @@ Even if the Figma file shows only one theme variant, any non-product, non-brand 
 
 | Helper | When | Result |
 |---|---|---|
-| `themeMedia(path, w, h, color, ext, scales)` | Same image for all breakpoints | Single `MediaImage` |
-| `themeResponsiveMedia(path, mobileW, mobileH, desktopW, desktopH, color, ext, scales)` | Separate `{path}-mobile.{ext}` and `{path}-desktop.{ext}` | Single `MediaImage` with responsive sources |
+| `themeMedia(path, width, height, fallbackColor, extension = 'png', focalPoint?)` | Same image for all breakpoints | Single `MediaImage` served from `/img/{path}.{extension}` |
+| `themeResponsiveMedia(path, mobileWidth, mobileHeight, desktopWidth, desktopHeight, fallbackColor, extension = 'png', mobileFocalPoint?, desktopFocalPoint?)` | Separate `/img/{path}-mobile.{extension}` and `/img/{path}-desktop.{extension}` | Single `MediaImage` with responsive sources |
+
+`fallbackColor` becomes the solid placeholder shown while the image loads; focal points are `[x, y]` tuples. The files themselves go in a public `img/` directory, so `path` is relative to `/img/`.
 
 Images are registered per theme in `ImageSet` (defined by `@laioutr-core/ui-kit`). Each entry is a `MediaImage` or a `[MediaImage, MediaImage]` tuple for `[light, dark]` color modes. Upstream ships canonical keys (`placeholder1x1Product`, `emptyStateBox`, …). Your module registers additional keys (and overrides existing ones) by calling `extendTheme()` in its own theme module.
 
-## Brightness-Based Naming Convention
+## Surface-Tone Naming Convention
 
-Components using `OnBackground` typically require **three** `ImageName` entries:
+A component whose default image depends on the surface tone it sits on typically uses **three** `ImageName` entries:
 
 | Key | Type | When used |
 |---|---|---|
-| `{prefix}Default` | `[MediaImage, MediaImage]` tuple | `backgroundBrightness` is `'light'` — element 0 for light color mode, element 1 for dark |
-| `{prefix}Dark` | `MediaImage` | `backgroundBrightness` is `'dark'` |
-| `{prefix}Bright` | `MediaImage` | `backgroundBrightness` is `'bright'` |
+| `{prefix}Default` | `[MediaImage, MediaImage]` tuple | surface tone is `'light'` — element 0 for light color mode, element 1 for dark |
+| `{prefix}Dark` | `MediaImage` | surface tone is `'dark'` |
+| `{prefix}Bright` | `MediaImage` | surface tone is `'bright'` |
 
 Example: `bannerBasicDefault`, `bannerBasicDark`, `bannerBasicBright`.
 
 ## Consumption in Components
 
+The component picks the key from its surface tone — a `surfaceTone` prop, or `useSurfaceTone()` when it inherits the tone — and `theme.image()` resolves a `[light, dark]` tuple by color mode:
+
 ```typescript
 const theme = useTheme();
-const bg = theme.image('bannerBasicDefault'); // auto-resolves [light,dark] tuple
+const tone = useSurfaceTone(props);
+const bg = computed(() => (tone.value === 'dark' ? theme.image('bannerBasicDark') : theme.image('bannerBasicDefault')));
 ```
 
-Pass the result to `<Media :media="bg" />`.
+Pass the result to `<LMedia :media="bg" />`.
 
 ## Theme Inheritance
 
@@ -64,7 +69,7 @@ Upstream themes form a chain: `@laioutr-core/ui-kit`'s base theme defines all ca
 When proposing new themable images:
 
 - **If the key is app-specific** (only your storefront needs it), register it in your module's own theme. `ImageName` includes `| (string & {})` for extensibility, so `theme.image('myCustomKey')` works without upstream changes. Document the contract in your theme's source.
-- **If the key is generic** (multiple Laioutr storefronts would want it), the canonical key needs to land in `@laioutr-core/ui-kit`'s `ImageName` type and base theme. You can't edit those directly — file an issue against `laioutr/ui-source` or open a PR there. In the meantime, register it locally as an app-specific key and revisit when upstream lands.
+- **If the key is generic** (multiple Laioutr storefronts would want it), the canonical key needs to land in `@laioutr-core/ui-kit`'s `ImageName` type and base theme. You can't edit those directly — file an issue against `laioutr-ui/ui-kit` or open a PR there. In the meantime, register it locally as an app-specific key and revisit when upstream lands.
 
 ## In the Analysis Plan
 

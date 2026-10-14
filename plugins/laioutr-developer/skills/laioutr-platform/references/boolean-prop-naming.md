@@ -1,6 +1,6 @@
 # Boolean Prop Naming — the `is*` Rule
 
-Decide a boolean prop's name by asking what its **subject** is. Applies to any Vue component your module ships, and to the upstream `@laioutr-core/ui-kit`, `@laioutr-core/ui`, and `@laioutr-core/ui-app` patterns you mirror.
+Decide a boolean prop's name by asking what its **subject** is. Applies to any Vue component your module ships, and to the upstream `@laioutr-core/ui-kit`, `@laioutr-core/ui`, and `@laioutr-app/ui` patterns you mirror.
 
 ## The test: what is the subject of the boolean?
 

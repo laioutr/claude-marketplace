@@ -2,7 +2,43 @@
 
 When a `shared-fields/*.ts` export is a **function** that returns a field (as opposed to a static object), the return type must narrow to a literal — especially the `name` property — even when the call site lives inside `defineSection`/`defineBlock`'s `fields` array.
 
-Canonical reference: [Shared field factories — Laioutr docs](https://docs.laioutr.com/apps/app-development/shared-field-factories).
+Canonical reference: [Shared field factories — Laioutr docs](https://docs.laioutr.com/apps/app-development/guides/shared-field-factories).
+
+A **static** shared field needs no factory, but it does need its literals kept. Wrap it in a one-line identity helper you define once in `shared-fields/` (the upstream apps each do the same):
+
+```ts
+// shared-fields/defineField.ts
+import type { StudioFieldDefinition } from '@laioutr-core/core-types/fields';
+
+export const defineField = <const T extends StudioFieldDefinition>(definition: T): T => definition;
+```
+
+```ts
+// ✅ shared-fields/padding.ts
+export const paddingField = defineField({
+  type: 'select',
+  name: 'padding',
+  label: 'Padding',
+  default: 'none',
+  options: [
+    { label: 'None', value: 'none' },
+    { label: 'S', value: 's' },
+  ],
+});
+
+// ✅ also works: `as const` before `satisfies`
+export const paddingField = { /* … */ } as const satisfies StudioFieldDefinition;
+
+// ❌ `satisfies` alone widens `name` and every option `value` to `string`
+export const paddingField = { /* … */ } satisfies StudioFieldDefinition;
+
+// ❌ an annotation widens them too
+export const paddingField: StudioFieldDefinition = { /* … */ };
+```
+
+A widened `name` is worse than it looks: `definitionToProps` then matches the field against every prop name, so the whole Section's props collapse into a `string` index signature and `props.heading` loses its type. Checked with TypeScript 5.8 against `@laioutr-core/core-types` 0.68.
+
+The rest of this file is about **factory functions**.
 
 ## The contextual-widening trap
 
@@ -76,7 +112,7 @@ Use this pattern whenever you add a `shared-fields/*.ts` factory that:
 
 Prefer a **single `Opts` generic** and derive everything from `Opts[...]`. Never rely on a template-literal generic default to compute a literal name — it breaks under contextual typing.
 
-Static factories that accept the whole object via `const T extends StudioFieldDefinition` (like `defineField`/`defineFieldset`) are fine — they don't have this problem because the entire argument is captured as `T`, not a sub-property.
+Identity helpers that accept the whole object via `const T extends StudioFieldDefinition` are fine — they don't have this problem because the entire argument is captured as `T`, not a sub-property. No Laioutr package exports such a helper; the upstream apps each define their own one-liner in `shared-fields/` — the `defineField` shown at the top of this file.
 
 ## How to detect the regression
 

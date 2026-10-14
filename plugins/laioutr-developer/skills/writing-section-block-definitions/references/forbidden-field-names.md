@@ -22,6 +22,7 @@ collide. They're still discouraged for clarity, but mechanically safe.
 | `ref`              | Vue's template ref. Consumed by the renderer to register a template ref.                                                                                                                      |
 | `is`               | Vue's dynamic-component prop. Consumed by `<component :is>` and customized built-in elements.                                                                                                 |
 | `slot`             | Not special in normal SFC usage, but reserved for named-slot routing into Vue Custom Elements (`<my-element><div slot="…">`). Avoid for forward-compatibility with Web-Component compilation. |
+| `slots`            | Section-only. Frontend Core injects a `slots` prop carrying the blocks placed in each named slot; a field named `slots` is overwritten.                                                       |
 | `refFor`, `refKey` | Vue 3 compiler internals emitted when refs appear inside `v-for`. Reserved even though undocumented as public API.                                                                            |
 
 ## Field names are camelCase only
@@ -80,6 +81,8 @@ field, model it as a style decorator: `<fieldName>Style` with
   the prop-driven render path.
 - For `key` / `ref` / `is`, the value is consumed by the renderer and
   the `props` object simply lacks the key.
+- For `slots` on a Section, the configured value is replaced by the
+  slot data Frontend Core injects.
 - For `slot`, the bug only surfaces if the component is ever compiled
   to a Custom Element — silent in normal SFC use, which makes it harder
   to catch later.

@@ -8,7 +8,7 @@ Any time you are about to author more than ~3 lines of structural markup inside 
 
 ## How
 
-Search ui-kit via the discovery surfaces (docs MCP, Storybook, ui-source) — see the **Discovery surfaces** table in the parent `laioutr-platform` skill for which surface answers which question. Any exported component from `@laioutr-core/ui-kit` is in scope — import it directly when a match is plausible.
+Search ui-kit via the discovery surfaces (docs MCP, Storybook, <https://github.com/laioutr-ui/ui-kit>) — see the **Discovery surfaces** table in the parent `laioutr-platform` skill for which surface answers which question. Any exported component from `@laioutr-core/ui-kit` is in scope — import it directly when a match is plausible.
 
 ## Common miss-patterns (always check ui-kit first)
 
@@ -25,7 +25,7 @@ Resolve in this order — see [`three-layer-architecture.md`](./three-layer-arch
 
 1. **Prop or minor CSS override** on the existing ui-kit / ui component when a single prop / style change suffices.
 2. **Build a local custom component in your module** when the gap is specific to your app's domain.
-3. **Fork the upstream component** from <https://github.com/laioutr/ui-source> when it is almost right and you need to adjust internals. Copy the file locally and modify in your module. You take on the maintenance.
+3. **Fork the upstream component** from <https://github.com/laioutr-ui/ui-kit> (or <https://github.com/laioutr-ui/ui> for licensed users) when it is almost right and you need to adjust internals. Copy the file locally and modify in your module. You take on the maintenance.
 4. **Open an upstream issue** when the gap is generic and would benefit other apps. Improving upstream beats a long-lived fork.
 
 Only fall back to inline markup in your organism when the composition is genuinely one-off and domain-specific.

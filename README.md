@@ -7,19 +7,18 @@ components, Orchestr data integrations).
 
 ## Install
 
-```bash
-# Add the marketplace
-claude /plugin marketplace add laioutr/claude-marketplace
+Type these as slash commands inside a Claude Code session:
 
-# Install a plugin
-claude /plugin install laioutr-developer@laioutr
+```text
+/plugin marketplace add laioutr/claude-marketplace
+/plugin install laioutr-developer@laioutr
 ```
 
 ## Plugins in this marketplace
 
 | Plugin | Audience | What it ships |
 | --- | --- | --- |
-| [`laioutr-developer`](plugins/laioutr-developer/) | External frontend / full-stack developers building Vue / Nuxt apps and Orchestr integrations on Laioutr | 4 skills, 37 rules across `ui-kit` / `ui` / `ui-app` layers, MCP server for `docs.laioutr.com` |
+| [`laioutr-developer`](plugins/laioutr-developer/) | External frontend / full-stack developers building Vue / Nuxt apps and Orchestr integrations on Laioutr | 11 skills (platform overview, sections/blocks, entity and action tokens, Storybook, the Figma pipeline) with 67 read-on-demand reference files, plus the MCP server for `docs.laioutr.com` |
 
 Each plugin has its own `README.md` and `MAPPING.md` documenting source
 material, rewrites, and exclusions.

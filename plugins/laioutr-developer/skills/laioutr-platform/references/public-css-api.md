@@ -1,6 +1,6 @@
 # Public CSS API
 
-Every component your module publishes ships its CSS class names as part of its public surface. Downstream consumers of your Nuxt module write CSS against what they see. The rules below apply to every component you ship — presentational primitives in `src/runtime/components/`, Section/Block wrappers in `src/runtime/app/section|block/`, all of them.
+Every component your module publishes ships its CSS class names as part of its public surface. Downstream consumers of your Nuxt module write CSS against what they see. The rules below apply to every component you ship — presentational components in `src/runtime/app/components/`, Sections and Blocks in `src/runtime/app/sections/` and `blocks/`, all of them.
 
 ## The four override surfaces
 
@@ -105,31 +105,9 @@ Express the difference as a **prop on the child** instead — a variant, a slot,
 
 `v-bind()` is acceptable for values that are genuinely instance-private and never customer-overrideable (e.g. computed positioning offsets driven by intrinsic layout). When in doubt, prefer a CSS custom property.
 
-### 7. New runtime state uses data-attributes, not modifier classes
+### 7. Runtime state is a `data-*` attribute, not a modifier class
 
-Runtime state styling targets data-attributes:
-
-```vue
-<!-- ✓ -->
-<template>
-  <button class="my-button" :data-disabled="disabled || undefined" :data-loading="loading || undefined">
-    …
-  </button>
-</template>
-<style>
-@layer lui-components {
-  .my-button[data-disabled] { opacity: 0.5; }
-  .my-button[data-loading] .my-button__icon { animation: spin 1s linear infinite; }
-}
-</style>
-```
-
-```vue
-<!-- ✘ Don't introduce state-modifier classes -->
-<button :class="['my-button', { 'my-button--disabled': disabled, 'my-button--loading': loading }]">
-```
-
-reka-ui already emits `data-state`, `data-highlighted`, `data-disabled`, `data-orientation` on its primitives — match those when wrapping.
+Open/closed, disabled, selected and other runtime state go in reka-ui-named `data-*` attributes (`[data-state="open"]`, `[data-disabled]`) — never in `--disabled`-style modifier classes, and never styled off `aria-*` or `inert`. Vocabulary, the presence-vs-value encoding, and the ARIA boundary: [`component-state-attributes.md`](./component-state-attributes.md).
 
 ### 8. Block name = component file name (coordinated rename if it doesn't)
 
@@ -142,6 +120,7 @@ Consumers of your module cannot reliably restyle its components if class names c
 ## Related rules
 
 - [`no-wrapper-css-overrides.md`](./no-wrapper-css-overrides.md) — the prop-not-selector mechanism for cross-component styling
+- [`component-state-attributes.md`](./component-state-attributes.md) — the `data-*` state vocabulary, and why state is styled off `data-*` rather than `aria-*`
 - [`unique-component-names.md`](./unique-component-names.md) — component file names (which become block names) must be globally unique
 - [`parent-prefix-naming.md`](./parent-prefix-naming.md) — when to use compound naming for sub-components
 - The sibling `writing-storybook-stories` skill covers story conventions, including Public-Parts visibility

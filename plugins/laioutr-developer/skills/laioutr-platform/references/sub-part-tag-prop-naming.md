@@ -2,7 +2,7 @@
 
 When a component, section, or block exposes a prop or schema field that controls the **HTML tag** used to render a named sub-part — e.g. which heading level the headline renders as, or which element wraps the subline — that prop must be named `<part>As`.
 
-Applies to any Vue component, section, or block your module ships, and to upstream patterns in `@laioutr-core/ui-kit`, `@laioutr-core/ui`, and `@laioutr-core/ui-app`.
+Applies to any Vue component, section, or block your module ships, and to upstream patterns in `@laioutr-core/ui-kit`, `@laioutr-core/ui`, and `@laioutr-app/ui`.
 
 ## The rule
 

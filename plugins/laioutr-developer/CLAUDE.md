@@ -45,13 +45,15 @@ This plugin is curated from Laioutr's internal `.claude/` config. When re-syncin
 - Hardcoded paths like `packages/ui-kit/` — rewrite as "the ui-kit layer in your project" or use the public `@laioutr-core/*` package names.
 - Internal namespaces (`@laioutr-private/*`) — strip; not externally visible.
 - Tooling references that assume the monorepo's `playground/` directory or internal release pipelines — generalize or remove.
-- Workflows that only make sense for the core team (e.g. forking `laioutr/ui-source` to land upstream patches) need framing as "the rare external-dev case."
+- Workflows that only make sense for the core team (e.g. forking `laioutr-ui/ui-kit` or `laioutr-ui/ui` to land upstream patches) need framing as "the rare external-dev case."
 
 [`MAPPING.md`](./MAPPING.md) is the carry-over registry. Update it when adding, splitting, or removing files. It also tracks deferred cleanup (oversize SKILL bodies, pending skill promotions, refs still containing monorepo paths).
 
 ## Public Nuxt aliases vs monorepo internals
 
-`#frontend-core`, `#ui-kit/...`, `#ui/...` are **public Nuxt aliases** exposed by `@laioutr-core/frontend-core` — external devs use these directly. Don't rewrite them as monorepo-relative paths; they ARE the public surface.
+`#ui-kit/...` and `#ui/...` are **public Nuxt aliases** registered by `@laioutr-core/ui-kit` and `@laioutr-core/ui` — external devs use these directly. Don't rewrite them as monorepo-relative paths; they ARE the public surface. Frontend Core's define helpers (`defineSection`, `defineBlock`, `definitionToProps`, …) are auto-imports from `#imports`; there is **no** `#frontend-core` alias and no `#ui-app` alias. Before writing any `#…` import into plugin content, confirm the alias in that package's `module.ts` (`nuxt.options.alias[...]`).
+
+The package in the monorepo's `packages/ui-app` is published as **`@laioutr-app/ui`** — there is no `@laioutr-core/ui-app`.
 
 ## Cross-plugin dependencies
 

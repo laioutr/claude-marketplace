@@ -1,6 +1,6 @@
 # Component State Contract — v-model, Validation, Field Context
 
-Use one shape for v-model, validation, and field context across the components your module ships. Applies to any Vue component you build, and to the upstream `@laioutr-core/ui-kit`, `@laioutr-core/ui`, and `@laioutr-core/ui-app` patterns you mirror. For the reka-ui *mechanics* of typed re-emits, see [`reka-ui-wrapper-patterns.md`](./reka-ui-wrapper-patterns.md).
+Use one shape for v-model, validation, and field context across the components your module ships. Applies to any Vue component you build, and to the upstream `@laioutr-core/ui-kit`, `@laioutr-core/ui`, and `@laioutr-app/ui` patterns you mirror. For the reka-ui *mechanics* of typed re-emits, see [`reka-ui-wrapper-patterns.md`](./reka-ui-wrapper-patterns.md).
 
 ## v-model
 
@@ -31,11 +31,13 @@ defineProps<{
 
 ## Field context — one shape
 
-`Field` provides, and every form input injects via `injectFieldContext` and reads the keys it cares about:
+`Field` provides, and every form input injects via `injectFieldContext` and reads the keys it cares about. ui-kit's own inputs do this through the auto-imported `useFieldContext(props)`, which merges the input's own props with the context — the state booleans OR-merged, `id` / `label` / `errorMessage` preferring the input's own prop:
 
 ```ts
-{ id, disabled, readonly, required, invalid, errorMessage }
+{ id, label, disabled, readonly, required, invalid, errorMessage }
 ```
+
+`label` exists for a control that sets its own `aria-label` fallback. `aria-label` wins over `<label for>`, so ui-kit's `Select` puts the Field's label into `aria-label` first — otherwise its placeholder fallback would replace the Field's label as the accessible name.
 
 No partial-honor models: an input that wraps in `<Field disabled required>` must actually consume `disabled` and `required` (and put `aria-required` on the control) rather than silently dropping them.
 

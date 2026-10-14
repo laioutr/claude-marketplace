@@ -9,7 +9,7 @@ description: Use when analyzing Figma designs before implementation, when decomp
 
 Analyze Figma designs to produce structured implementation plans through an interactive process. Explores designs via the Figma MCP, gathers requirements interactively, maps tokens, matches existing components, decides package placement, presents findings section-by-section for approval, and challenges its own decisions before finalizing.
 
-**Scope boundary:** This skill plans **presentational components** — standalone, data-agnostic, composable pieces that receive data via props and emit events. Matches against upstream are searched in `@laioutr-core/ui-kit` (atomic primitives) and `@laioutr-core/ui` (commerce organisms); new components you'll author live in your own Nuxt module's `src/runtime/components/` without any layer categorization. This skill does NOT plan section/block wrappers, data integration, page components, page layouts, or Nuxt routing — Section/Block wrappers (which bind components to Studio and to data) are the `writing-section-block-definitions` skill's territory.
+**Scope boundary:** This skill plans **presentational components** — standalone, data-agnostic, composable pieces that receive data via props and emit events. Matches against upstream are searched in `@laioutr-core/ui-kit` (atomic primitives) and `@laioutr-core/ui` (commerce organisms); new components you'll author live in your own Nuxt module's `src/runtime/app/components/` without any layer categorization. This skill does NOT plan section/block wrappers, data integration, page components, page layouts, or Nuxt routing — Section/Block wrappers (which bind components to Studio and to data) are the `writing-section-block-definitions` skill's territory.
 
 Output feeds `figma-component-architecture` (for plans with 3+ components, to spec props/slots/events/state) and then `figma-to-component` for implementation. For trivial single-component plans, `figma-to-component` can consume the analysis directly.
 
@@ -35,8 +35,12 @@ digraph figma_analysis {
     "Phase 4: Present plan\nsection-by-section" [shape=box];
     "User approves section?" [shape=diamond];
     "More sections?" [shape=diamond];
-    "Phase 5: Challenge the plan\n(self-critique + gaps)" [shape=box];
-    "User answers challenges?" [shape=diamond];
+    "Phase 5: Self-critique\n+ identify gaps" [shape=box];
+    "Gap has 2-4 plausible options?" [shape=diamond];
+    "AskUserQuestion\n(options + Recommended)" [shape=box];
+    "Add to Open Questions\nwith suggested default" [shape=box];
+    "More gaps?" [shape=diamond];
+    "User answered self-critique?" [shape=diamond];
     "Write final document" [shape=doublecircle];
 
     "Receive Figma URL(s)" -> "Phase 1: Explore Figma\n+ collect Jira context";
@@ -47,9 +51,15 @@ digraph figma_analysis {
     "User approves section?" -> "More sections?" [label="yes"];
     "User approves section?" -> "Phase 4: Present plan\nsection-by-section" [label="revise"];
     "More sections?" -> "Phase 4: Present plan\nsection-by-section" [label="yes"];
-    "More sections?" -> "Phase 5: Challenge the plan\n(self-critique + gaps)";
-    "Phase 5: Challenge the plan\n(self-critique + gaps)" -> "User answers challenges?";
-    "User answers challenges?" -> "Write final document" [label="resolved"];
+    "More sections?" -> "Phase 5: Self-critique\n+ identify gaps";
+    "Phase 5: Self-critique\n+ identify gaps" -> "Gap has 2-4 plausible options?";
+    "Gap has 2-4 plausible options?" -> "AskUserQuestion\n(options + Recommended)" [label="yes"];
+    "Gap has 2-4 plausible options?" -> "Add to Open Questions\nwith suggested default" [label="no"];
+    "AskUserQuestion\n(options + Recommended)" -> "More gaps?";
+    "Add to Open Questions\nwith suggested default" -> "More gaps?";
+    "More gaps?" -> "Gap has 2-4 plausible options?" [label="yes"];
+    "More gaps?" -> "User answered self-critique?";
+    "User answered self-critique?" -> "Write final document" [label="yes"];
 }
 ```
 
@@ -59,13 +69,14 @@ Each phase below names a dedicated reference. Open the reference before executin
 
 ### Phase 1: Figma Exploration
 
-**Open [`references/phase-1-figma-exploration.md`](references/phase-1-figma-exploration.md)** for: MCP failure handling, exploration strategy, extracting `data-development-annotations` (and the jq recovery recipe), discovering component definitions (dedicated library vs per-component canvas vs no local definitions), capturing per-component Figma links (definition over instance, composition vs variant matrix), recognizing variant matrices, scanning for Jira ticket references.
+**Open [`references/phase-1-figma-exploration.md`](references/phase-1-figma-exploration.md)** for: MCP failure handling, exploration strategy, enumerating visible-state variant frames, extracting `data-*-annotations` across every category and both emitted forms (the jq recovery recipe and its sanity checks), cross-file Figma links inside annotations, discovering component definitions (dedicated library vs per-component canvas vs no local definitions), capturing per-component Figma links (definition over instance, composition vs variant matrix), recognizing variant matrices, scanning for Jira ticket references.
 
 The Figma MCP requires the **Figma desktop app** open with the target document as the active tab. From URL `https://www.figma.com/design/:fileKey/:fileName?node-id=75-37105`, the node ID is `75:37105` (replace `-` with `:`).
 
-**Two high-frequency rules to keep in mind during exploration:**
+**Three high-frequency rules to keep in mind during exploration:**
 
-- **Annotations only appear in leaf-level `get_design_context` calls.** Section-level calls return sparse metadata WITHOUT annotations — drill into each meaningful subgroup. A sparse response is not "no annotations exist."
+- **Annotations only appear where the annotated element is rendered.** Section-level calls return sparse metadata WITHOUT annotations — drill into each meaningful subgroup (depth), and call `get_design_context` on every sibling visible-state frame such as default/expanded or mobile/desktop (breadth). A sparse response is not "no annotations exist."
+- **Never scan for one literal annotation attribute.** Every annotation category emits its own `data-<slug>-annotations`, and variant sets emit them as JSX ternaries (`={cond ? "note" : undefined}`) rather than quoted strings. Use the reference's recipe, always run its form-agnostic `rg -c 'annotat'` check, and scan inline responses while they are still in context. The MCP's trailing "do not ignore annotation attributes" warning proves nothing either way.
 - **Composition vs variant matrix determines what to link.** A frame containing different child components assembled together (header + form + summary) is a *composition* → link each child at its definition frame. A frame containing variants of the same component (size × color × state) is a *variant matrix* → link the parent only.
 
 ### Phase 2: Requirements Gathering
@@ -91,7 +102,7 @@ After Phase 1 exploration, ask 3-5 high-level questions **one at a time** using 
 Three sub-areas, each with its own reference. All are required before assembling the plan.
 
 - **Token mapping** — open [`references/token-mapping.md`](references/token-mapping.md) for: Figma-variable to CSS-custom-property conversion rules, color flattening (`colors/` prefix drop, `greys/` and `overlays/` rewrites), validating hex colors against installed `@laioutr-core/ui-tokens`, verifying tokens against component source, distinguishing direct CSS vars from UnoCSS utility classes.
-- **Themable default images** — open [`references/themable-default-images.md`](references/themable-default-images.md) for: when an image is themable (decorative backgrounds, placeholders, empty states), the `themeMedia()` / `themeResponsiveMedia()` helpers, the `Default/Dark/Bright` naming convention for components using `OnBackground`, registering new `ImageName` keys, theme inheritance.
+- **Themable default images** — open [`references/themable-default-images.md`](references/themable-default-images.md) for: when an image is themable (decorative backgrounds, placeholders, empty states), the `themeMedia()` / `themeResponsiveMedia()` helpers, the `Default/Dark/Bright` naming convention for surface-tone-aware components (Default/Dark/Bright keys), registering new `ImageName` keys, theme inheritance.
 - **Component matching + placement** — open [`references/component-matching-and-placement.md`](references/component-matching-and-placement.md) for: searching the installed `@laioutr-core/ui-kit`/`ui`/`ui-app` source, the common-matches table, REUSE-vs-NEW criteria and modification-intent format, cross-file verification (double processing, dead injection keys, hardcoded config maps, CVA overlaps), the package-placement decision tree, decomposing complex designs ("every region must be accounted for"), and the **Early Exit** path when all components already exist.
 
 ### Phase 4: Present Plan Section-by-Section
@@ -112,28 +123,34 @@ After presenting each section, ask: *"Does this section look right, or should I 
 
 If the user requests changes, revise and re-present before continuing. If the user says "looks good" or equivalent, proceed to the next section.
 
-### Phase 5: Challenge the Plan
+### Phase 5: Challenge the Plan and Close Gaps
 
-Before writing the final document, challenge the plan in two ways.
+Before writing the final document, do two things: challenge your own decisions, and **actively close every gap you can**.
 
-**Self-Critique** — Present 3-5 numbered challenges questioning your own decisions:
+**Self-Critique** — Present 3-5 numbered challenges as text; the user replies with which to revise:
 - Component consolidation: "Should this NEW component share logic with an existing one?"
 - Granularity: "Is this NEW component too domain-specific? Could a more generic primitive cover it?"
 - REUSE vs NEW: "Could the existing Accordion be extended instead of creating a new one?"
 
-**Unresolved Gaps** — Surface questions the Figma design doesn't answer:
-- Missing states (error, loading, empty)
-- Missing interactions (cancel/save flows)
-- Missing responsive layouts
-- Missing skeleton states
+**Closing Gaps Actively** — Identify what the Figma design doesn't answer (missing states, interactions, responsive layouts, loading/empty/error/skeleton states, copy, time-zone/format/unit decisions). **Do not just list them.** For each gap:
 
-Present all challenges as numbered questions. **Wait for user answers before writing the final document.** Unresolved items go into the Open Questions subsection.
+| If the gap is... | Do this |
+|---|---|
+| Answerable with 2–4 plausible options you can name | **Use `AskUserQuestion`** with those options. Mark the one you'd pick `(Recommended)`; one-line trade-off per option |
+| Open-ended (needs design input — empty-state copy, illustration choice) | Add to the plan's `Open Questions` with a suggested default the implementer can use until design responds |
+| Already resolved by an annotation, code finding, or the user's earlier answers | Drop it — don't ask again |
+
+- **Ground the options first.** For a gap you don't yet know how to scope, do a brief research step (grep your module and the installed `@laioutr-core/*` source, `WebSearch`, a docs MCP such as `laioutr-docs` or Context7) so the options are validated, not guesses.
+- **Batch** related questions into one `AskUserQuestion` call (up to 4 per call), grouped by topic (states, i18n/format, responsive) so the user answers in one pass. Lock in the answers and move on.
+- **Aim to close ≥70% of identified gaps interactively.** A plan full of unresolved questions pushes synthesis you should have done back onto the implementer.
+
+**Wait for user answers** to both the self-critique and the gap-closing questions before writing the final document.
 
 ## Plan Output
 
 **Open [`references/plan-output-template.md`](references/plan-output-template.md)** for: the full markdown template, the ten key rules every plan must satisfy, and the definition of "non-obvious behavior" worth annotating inline.
 
-Every NEW or REUSE component must include: a Figma link to its **definition** frame (not an instance), status (`NEW`/`EXISTS`/`REUSE`), package placement, modification intent (REUSE only), and any verbatim `_Designer note (<node-id> <name>): "..."_` lines extracted from the Figma MCP. Designer annotations override visual analysis when they conflict.
+Every NEW or REUSE component must include: a Figma link to its **definition** frame (not an instance), status (`NEW`/`EXISTS`/`REUSE`), package placement, modification intent (REUSE only), and any verbatim `_Designer note (<node-id> <name>, <category>): "..."_` lines extracted from the Figma MCP (every annotation category). Designer annotations override visual analysis when they conflict.
 
 ## Subagent Orchestration
 
@@ -151,7 +168,7 @@ Not all phases carry equal weight. If the user asks to compress the process:
 | Phase 2: Requirements | **Critical** | Reduce to 1 question | At least 1 scope/constraint question before outputting any plan |
 | Phase 3: Analysis | **Critical** | No | Must complete fully |
 | Phase 4: Present | Refinement | Merge into fewer sections | Can present as 2-3 grouped sections instead of 7 |
-| Phase 5: Challenge | Refinement | Append non-blocking | Can append challenges as "Open Questions for Review" |
+| Phase 5: Challenge + close gaps | **Critical** | Batch the gap-closing questions into one `AskUserQuestion` call | Must still actively close gaps with options + recommendations; only truly open-ended gaps go to Open Questions with a suggested default |
 
 **MUST NOT** output a plan document without at least one user interaction in Phase 2. A plan without scope validation is worse than no plan — it gives false confidence in wrong assumptions.
 
@@ -162,7 +179,7 @@ If the user asks to skip the interactive process, do NOT silently comply. Instea
 1. Compress Phase 2 to exactly 1 question — the highest-risk scope decision
 2. Run Phase 3 normally (non-interactive anyway)
 3. Present Phase 4 as 2-3 grouped sections instead of 7
-4. Append Phase 5 challenges as a non-blocking "Open Questions for Review" section in the output
+4. Phase 5 still runs the gap-closing questions — but batch them all into a single `AskUserQuestion` call (up to 4 questions). Only truly open-ended gaps land in the document's Open Questions section with a suggested default.
 
 Explain briefly: *"I'll compress this, but I need one question answered first — getting the scope wrong makes the whole plan unusable."*
 
@@ -175,7 +192,7 @@ Explain briefly: *"I'll compress this, but I need one question answered first �
 | Creating a Figma breakpoint prop | Breakpoints are CSS media queries, not props |
 | Authoring a new generic primitive when an upstream one exists | Search upstream `@laioutr-core/ui-kit` for atomic primitives and `@laioutr-core/ui` for commerce organisms before proposing NEW |
 | Assuming Figma breakpoint count = implementation count | Figma shows all widths; implementation collapses adjacent identical breakpoints |
-| Incomplete hardcoded config maps (missing themes) | Always verify maps against `ls node_modules/@laioutr-core/ui-kit/src/runtime/app/theme/` |
+| Incomplete hardcoded config maps (missing themes) | Always verify maps against `ls node_modules/@laioutr-core/ui-kit/dist/runtime/app/theme/` |
 | Dead injection keys in types.ts | Verify `provide()`/`inject()` calls exist; remove unused symbols |
 | Missing token abstraction layer distinction | Check both direct CSS vars and UnoCSS utilities; flag split concerns |
 | No implementation order in plan | Always specify leaf-first order with rationale |
@@ -184,6 +201,8 @@ Explain briefly: *"I'll compress this, but I need one question answered first �
 | Specifying exact props/slots for modifications | Describe modification intent at high level; leave API design to figma-component-architecture skill |
 | Dumping entire plan without checkpoints | Present section-by-section in Phase 4; get user approval before continuing |
 | Not challenging own decisions | Run self-critique in Phase 5 before finalizing |
+| Listing gaps as Open Questions when they could be resolved | In Phase 5, propose 2-4 concrete options per gap (one marked `(Recommended)`) and close it with `AskUserQuestion`. Only truly open-ended gaps (need design input, e.g. empty-state copy) go to Open Questions, with a suggested default. Aim to close ≥70% interactively |
+| Asking the user to choose between options you haven't validated | Do a brief grounded research step (source grep, `WebSearch`, docs MCP) before proposing options. Don't make the user decide between guesses |
 | Ignoring Jira ticket references | Scan Figma descriptions for ticket refs; fetch via Jira MCP |
 | Documenting obvious behaviors | Only annotate non-obvious behaviors an implementer might miss from a static mockup |
 | Missing Figma links on NEW/REUSE components | Every NEW and REUSE component needs a link to its Figma node — without it, the implementation skill must re-explore the full file |
@@ -205,11 +224,15 @@ Explain briefly: *"I'll compress this, but I need one question answered first �
 | Treating `/`-separated instance names as opaque strings | Parse as `category / component-name / variant` — match on the component-name segment, not the full path |
 | Producing an empty plan when all components already exist | Use the Early Exit path — present the hierarchy as confirmation/audit and suggest next steps in the Section/Block wrapper |
 | Discarding successful MCP data when later calls fail | Work with partial data from earlier successful calls. Note which nodes could not be explored and ask the user to re-focus Figma |
-| Treating themable images as plain image props | Decorative backgrounds, placeholders, and empty states are theme-provided — note as `themeMedia()` / `themeResponsiveMedia()` usage, map to `ImageName` keys, and follow the `Default/Dark/Bright` naming convention if the component uses `OnBackground` |
-| Skipping `data-development-annotations` in `get_design_context` output | Each value is a designer-authored note — about optionality, interaction, routing, package placement, or cross-component contracts. Extract every one verbatim with `data-node-id` and `data-name`. For file-form responses, use `jq -r '.[].text' file \| grep -B 2 -A 10 'data-development-annotations='` |
+| Treating themable images as plain image props | Decorative backgrounds, placeholders, and empty states are theme-provided — note as `themeMedia()` / `themeResponsiveMedia()` usage, map to `ImageName` keys, and follow the `Default/Dark/Bright` naming convention if the component adapts to its surface tone |
+| Skipping annotations in `get_design_context` output | Each value is a designer-authored note — about optionality, interaction, routing, package placement, or cross-component contracts. Extract every one verbatim with `data-node-id` and `data-name`, using the jq recipe in the Phase 1 reference |
+| Matching only `data-development-annotations`, or only the quoted `="…"` form | Every annotation *category* emits its own `data-<slug>-annotations` (`data-information-for-designers-annotations` is confirmed in the wild), and **variant-set components emit annotations as JSX expressions** — `={state === "start" ? "…" : undefined}`. Either narrowing reads as "no annotations". Match `data-[a-z-]*annotations` with value `("[^"]+"\|\{[^}]*\})`, always run the form-agnostic `rg -c 'annotat'` check, and never treat the MCP's trailing annotation warning as proof either way |
+| Claiming annotation coverage for responses you only eyeballed | Inline (non-persisted) responses can't be re-scanned with jq later. Scan while fresh or re-fetch. State exactly which nodes were recipe-verified and which were not |
+| Stopping at the default frame and missing annotations on hidden subtrees | Visible-state variant frames (default/expanded, mobile/desktop, before/after search) are sibling frames with different subtrees; annotations on elements visible in one don't surface in the other's call. Call `get_design_context` on every frame whose name shares a stem, then merge annotation rows |
+| Treating a cross-file Figma URL inside an annotation as decoration | It is supplementary context the designer recorded (definition, usage example, pattern, background) — investigation is non-optional. **Stop, ask the user to open the linked file in Figma desktop, and wait for confirmation**; never defer the lookup or substitute the inline render. Then call `get_design_context` on the linked node |
 | Reading annotations but not letting them shape the plan | Annotations are inputs, not just text. `-> UI Kit` overrides default placement; `Go to X` is a routing contract reflected in props/events; `optional` means conditional content. If an annotation contradicts your visual analysis, the annotation wins |
 | Calling `get_design_context` only at section level | Section-level calls return sparse metadata WITHOUT annotations. Annotations only appear in leaf-level (or near-leaf) calls that return full code. Drill down into each meaningful subgroup |
-| Folding designer annotations into "Non-obvious" italic notes | Verbatim designer notes and inferred behavioral notes serve different purposes — reviewers must be able to tell them apart. Use `_Designer note (<node-id> <name>): "<verbatim>"_` for annotations and `_Non-obvious: ..._` for inference |
+| Folding designer annotations into "Non-obvious" italic notes | Verbatim designer notes and inferred behavioral notes serve different purposes — reviewers must be able to tell them apart. Use `_Designer note (<node-id> <name>, <category>): "<verbatim>"_` for annotations and `_Non-obvious: ..._` for inference |
 
 ## Next step: invoke figma-component-architecture
 

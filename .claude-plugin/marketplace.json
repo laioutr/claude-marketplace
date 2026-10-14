@@ -14,7 +14,7 @@
       "source": "./plugins/laioutr-developer",
       "description": "Workflows, rules, and the docs MCP for developers building on the Laioutr e-commerce platform.",
       "homepage": "https://github.com/laioutr/claude-marketplace",
-      "license": "UNLICENSED",
+      "license": "MIT",
       "keywords": ["laioutr", "developer", "typescript", "vue", "nuxt"]
     }
   ]

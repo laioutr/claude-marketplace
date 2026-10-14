@@ -67,8 +67,8 @@ When all conditions hold, perform lightweight analysis before implementing:
 1. `get_design_context` with `clientLanguages: "typescript,vue"` and `clientFrameworks: "vue,nuxt"`
 2. `get_variable_defs` for token definitions
 3. Extract variant matrix (each Figma axis -> prop, breakpoints -> CSS media queries)
-4. Search for existing components: `grep -r "ComponentName" node_modules/@laioutr-core/ui-kit/src/ node_modules/@laioutr-core/ui/src/` (skip `ui-app` — it exports section/block helpers, not presentational components)
-5. Place the new component in your module's `src/runtime/components/<Name>/` (directory layout below)
+4. Search for existing components: `grep -r "ComponentName" node_modules/@laioutr-core/ui-kit/dist/ node_modules/@laioutr-core/ui/dist/` (`@laioutr-app/ui` holds Sections and Blocks, not presentational components)
+5. Place the new component in your module's `src/runtime/app/components/<Name>/` (directory layout below)
 
 **If Figma MCP tools fail** (e.g., desktop app not open), ask the user to open the file in Figma desktop. Do not proceed to implementation without Figma data.
 
@@ -92,9 +92,9 @@ Full conversion rules are in the `figma-design-analysis` skill.
 
 ### Where new components live
 
-New presentational components go in your Nuxt module under `src/runtime/components/<Name>/`. No further categorization needed.
+New presentational components go in your Nuxt module under `src/runtime/app/components/<Name>/`. No further categorization needed.
 
-Section/Block wrappers (`defineSection` / `defineBlock`) live separately at `src/runtime/app/section/` and `src/runtime/app/block/` — built by the `writing-section-block-definitions` skill, not here.
+Section/Block wrappers (`defineSection` / `defineBlock`) live separately at `src/runtime/app/sections/` and `src/runtime/app/blocks/` — built by the `writing-section-block-definitions` skill, not here.
 
 ## Before implementation: check for assets that need exporting
 
@@ -109,7 +109,7 @@ Before writing any `.vue` referencing `<img>`, `<Media>`, `<NuxtImg>`, or a back
 If any of these appear, **invoke `figma-export-assets` before writing the component**. That skill owns the format/scale/destination/filename decisions and produces a structured export spec (it can't write image bytes itself; the spec is what gets handed off to the Figma File → Export step or the REST API).
 
 Skip the asset-export step only when **all** of these hold:
-- The component renders only icons from the existing `IconName` union exported by `@laioutr-core/ui-kit`
+- The component renders only icons from the existing `IconName` union (`#ui-kit/types`)
 - All raster content is theme-provided (`useTheme().image()` / `themeMedia()` / `themeResponsiveMedia()`) — already registered upstream
 - All raster content comes from props (e.g., `<Media :media="product.image" />`) — supplied by the consumer, not bundled with the component
 
@@ -185,7 +185,7 @@ defineSlots<{
 | Story helpers (MediaImage factory) | `import { toMedia } from '#ui-kit/imports/toMedia'` |
 | Composables, Vue APIs | `#imports` |
 
-**Prefer explicit imports** over Nuxt auto-imports, even when auto-registration is available (e.g., `Lui`-prefixed components). Explicit imports make dependencies visible and traceable. The project is transitioning toward auto-imports with the `L` prefix; during this transition, use explicit imports for new components. When verifying existing code, either pattern is acceptable.
+**Prefer explicit imports** over Nuxt auto-imports, even when auto-registration is available (ui-kit and ui components are auto-registered with the `L` prefix, e.g. `LButton`). Explicit imports make dependencies visible and traceable. The project is transitioning toward auto-imports with the `L` prefix; during this transition, use explicit imports for new components. When verifying existing code, either pattern is acceptable.
 
 ### CSS Pattern
 
@@ -329,19 +329,21 @@ Hero/above-the-fold components should use `MediaAboveTheFoldProvider` to signal 
 
 Import from `#ui-kit/components/Media/MediaAboveTheFoldProvider`. The provider sets eager loading for images within its scope when `isAboveTheFold` is true.
 
-### Background Brightness
+### Surface Tone
 
-Use `OnBackground` to wrap content that adapts to background brightness (dark/light/bright). It provides `Ref<BackgroundBrightness>` via `createContext` and sets CSS variables (`--font-color`, `--font-color-subline`, `--font-color-caption`, `--font-color-body-text`, `--icon-color`) so text/icons auto-switch between white and black.
+A component that paints a background must declare the tone of that surface so text and icons inside it pick contrasting colors. Wrap the content in `OnSurface` with a `tone`, or use `Backdrop`, which derives the tone from its `background` prop:
 
 ```vue
-<OnBackground :brightness="backgroundBrightness" class="hero-slide">
+<OnSurface :tone="surfaceTone" class="hero-slide">
   <!-- Content inside automatically gets appropriate text colors -->
-</OnBackground>
+</OnSurface>
 ```
 
-**Values:** `'dark'` (white text), `'light'` (default/themed), `'bright'` (black text). Supports auto-detection from hex colors via WCAG contrast formula.
+**Values:** `'light'` (default/themed), `'dark'` (white text), `'bright'` (black text). `OnSurface` remaps `--font-color-heading`, `--font-color-subline`, `--font-color-caption`, `--font-color-body-text` and `--icon-color` for its subtree.
 
-**Child access:** Use `useBackgroundBrightness()` composable to read the current brightness in descendant components (defaults to `'light'` outside any `OnBackground` scope).
+**Child access:** `useSurfaceTone(props?)` returns the tone — an explicit `surfaceTone` prop first, then the nearest `OnSurface`, then `'light'`.
+
+A component that paints nothing must not declare a tone. Rules, the custom-color case and forbidden patterns: `surface-tone.md` in the `laioutr-platform` skill.
 
 ### Section Component Pattern (for defineSection)
 
@@ -449,7 +451,7 @@ After reporting completion, ask the user explicitly:
 Skip the offer only when:
 - The component is itself a section/block (already a `defineSection`/`defineBlock` definition — not a presentational primitive)
 - The user already stated the component is for direct composition in another component, not for Studio placement
-- A wrapper already exists (verified by searching the module's `src/runtime/app/section/` and `src/runtime/app/block/` for usages of the component)
+- A wrapper already exists (verified by searching the module's `src/runtime/app/sections/` and `src/runtime/app/blocks/` for usages of the component)
 
 If the user accepts, invoke `writing-section-block-definitions`. The integration requirements section of the architecture spec (when present) is the brief for the wrapper.
 

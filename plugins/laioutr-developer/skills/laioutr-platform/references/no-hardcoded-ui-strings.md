@@ -22,8 +22,9 @@ defineProps<{ placeholder?: string }>();   // default undefined — no English d
 defineProps<{ emptyText?: string }>();      // = 'No results'
 ```
 
-Use `$tl(...)` in templates and `useLocale().t(...)` in script. Add the key to your module's locale files (`locale/{en,de}.ts` or equivalent — and the consuming package's locale) when introducing a fallback.
+Which of the two to use where: [`translations-tl-vs-useLocale.md`](./translations-tl-vs-useLocale.md). Add the key to your module's locale files (`locale/{en,de}.ts` or equivalent — and the consuming package's locale) when introducing a fallback.
 
 ## Related
 
+- [`translations-tl-vs-useLocale.md`](./translations-tl-vs-useLocale.md) — `$tl` in templates, `useLocale()` only from script
 - [`money-currency-code.md`](./money-currency-code.md) — currency is an ISO code, never a localized label

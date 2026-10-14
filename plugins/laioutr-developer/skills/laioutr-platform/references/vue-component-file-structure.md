@@ -5,13 +5,13 @@ Conventions for any Vue component your module authors — atom-style primitives,
 ## File organization
 
 ```
-src/runtime/components/<ComponentName>/
+src/runtime/app/components/<ComponentName>/
 ├── <ComponentName>.vue          # Main component (required)
 ├── <ComponentName>.stories.ts   # Storybook stories (when your module ships stories)
 └── types.ts                     # Only if types are shared or large (50+ lines)
 ```
 
-The exact directory may differ (e.g. `src/runtime/app/section/` for Sections, `src/runtime/app/block/` for Blocks); the one-folder-per-component convention applies everywhere.
+Sections and Blocks are the exception: each is a single `.vue` file directly in `src/runtime/app/sections/` or `src/runtime/app/blocks/` (the layout the docs and the upstream `@laioutr-app/ui` Sections use, and the directories you pass to `registerLaioutrApp`). Every other component gets its own folder.
 
 ## Type exports
 

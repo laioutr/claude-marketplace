@@ -28,14 +28,14 @@ Analyzed: [date]
 - **ComponentA** -- NEW — [Desktop Layout](https://www.figma.com/design/fileKey/fileName?node-id=75-37105), [Mobile Layout](https://www.figma.com/design/fileKey/fileName?node-id=75-38200)
   - SubComponentB -- EXISTS at `#ui/components/SubComponentB/`
   - SubComponentC -- EXISTS at `#ui-kit/components/SubComponentC/`
-  - _Designer note (I75:37105;13:4105 "Details" button): "Go to Location Detail Page — 1) default location detail page type, 2) or link to custom page / pagetype" — routing contract; reflected as `to: RouteLocationRaw` prop_
+  - _Designer note (I75:37105;13:4105 "Details" button, development): "Go to Location Detail Page — 1) default location detail page type, 2) or link to custom page / pagetype" — routing contract; reflected as `to: RouteLocationRaw` prop_
   - _Non-obvious: hover on SubComponentB reveals tooltip with delivery estimate; collapsed → expanded transition on selection_
 - **ComponentD** -- NEW — [Form Variants](https://www.figma.com/design/fileKey/fileName?node-id=80-42000)
   - Field, Input, Select -- EXISTS in `@laioutr-core/ui-kit`
-- ExistingComponent -- REUSE at `#ui/components/organism/ExistingComponent/` — [Current Design](https://www.figma.com/design/fileKey/fileName?node-id=90-55000)
+- ExistingComponent -- REUSE at `#ui/components/ExistingComponent/` — [Current Design](https://www.figma.com/design/fileKey/fileName?node-id=90-55000)
   - _Modification intent: needs to support expandable content on selection and a custom icon area_
 
-Legend: **bold** = needs implementation, normal = exists (the existing import path follows `EXISTS at` / `REUSE at`), _Designer note (node-id name): "verbatim"_ = a `data-development-annotations` value extracted from the Figma MCP, _Non-obvious: ..._ = behavioral note inferred from the design, _Modification intent: ..._ = REUSE component change rationale, [Link Title](url) = Figma design for this component
+Legend: **bold** = needs implementation, normal = exists (the existing import path follows `EXISTS at` / `REUSE at`), _Designer note (node-id name, category[, variant scope]): "verbatim"_ = a `data-*-annotations` value extracted from the Figma MCP (any annotation category), _Non-obvious: ..._ = behavioral note inferred from the design, _Modification intent: ..._ = REUSE component change rationale, [Link Title](url) = Figma design for this component
 
 ## Variant Matrix
 
@@ -76,7 +76,7 @@ Legend: **bold** = needs implementation, normal = exists (the existing import pa
 - [ ] Hardcoded `border-radius: 8px` in your `BlockBar` — should be `var(--forms-border-radius)`
 - [ ] ...
 
-### In upstream components (advisory — file via `laioutr/ui-source`)
+### In upstream components (advisory — file on `laioutr-ui/ui-kit` or `laioutr-ui/ui`)
 
 - [ ] [Upstream `@laioutr-core/ui` `BrandHero`] hardcoded theme map missing `tech` — silent fallback
 - [ ] ...
@@ -96,8 +96,8 @@ Legend: **bold** = needs implementation, normal = exists (the existing import pa
 
 ### Open Questions
 
-- [Unresolved items from Phase 5 challenge]
-- [Gaps the Figma design doesn't answer]
+- [Open-ended gap Phase 5 could not close interactively — needs design input] — _Suggested default:_ [what the implementer uses until design responds]
+- ...
 
 [If no open questions: omit this subsection]
 ```
@@ -108,12 +108,12 @@ Legend: **bold** = needs implementation, normal = exists (the existing import pa
 2. **Every NEW and REUSE component gets a Figma link**: link to the specific Figma node so the implementation skill can find the design without re-exploring the file
 3. **REUSE components include modification intent**: high-level description of what changes and why, not props/slots
 4. **Implementation order is leaf-first**: innermost components before their parents
-5. **Issues distinguish owner**: list issues in components your module owns separately from issues observed in upstream — own-module issues carry a concrete fix; upstream issues are advisory and link to the `laioutr/ui-source` route
+5. **Issues distinguish owner**: list issues in components your module owns separately from issues observed in upstream — own-module issues carry a concrete fix; upstream issues are advisory and name the repo to file them on (`laioutr-ui/ui-kit` or `laioutr-ui/ui`)
 6. **Token mapping is complete**: every Figma variable used in the design appears in the table
 7. **Variant matrix distinguishes props from CSS**: breakpoints are never props
 8. **Non-obvious behaviors are annotated inline**: only behaviors an implementer might miss from a static mockup
-9. **Open questions are explicit**: unresolved gaps from Phase 5 are documented, not silently ignored
-10. **Designer annotations are surfaced verbatim and shape decisions**: every `data-development-annotations` value found in the Figma MCP output appears in the plan as a `_Designer note (<node-id> <name>): "<verbatim>"_` line under the relevant component. Annotations also drive decisions — `-> UI Kit` overrides default placement, `Go to {Page}` is a routing contract reflected in props/events, `optional` means conditional content. If an annotation contradicts your visual analysis, the annotation wins.
+9. **Open questions are explicit and few**: Phase 5 closes every gap it can via `AskUserQuestion`; only truly open-ended gaps land here, each with a suggested default — never silently ignored
+10. **Designer annotations are surfaced verbatim and shape decisions**: every `data-*-annotations` value found in the Figma MCP output — across *all* annotation categories, not just `development` — appears in the plan as a `_Designer note (<node-id> <name>, <category>): "<verbatim>"_` line under the relevant component. Where coverage is uneven, record which nodes were recipe-verified and which were not. Annotations also drive decisions — `-> UI Kit` overrides default placement, `Go to {Page}` is a routing contract reflected in props/events, `optional` means conditional content. If an annotation contradicts your visual analysis, the annotation wins.
 
 ## What Counts as Non-Obvious Behavior
 

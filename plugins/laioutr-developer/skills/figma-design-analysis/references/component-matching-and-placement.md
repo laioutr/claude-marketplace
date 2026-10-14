@@ -10,24 +10,23 @@ Before planning ANY new component, search the existing inventory.
 
 - **prop / minor CSS override** when upstream already exposes the seam you need (preferred — see [`public-css-api.md`](../../laioutr-platform/references/public-css-api.md))
 - **local wrapper** in your own module that composes the upstream component (treats the REUSE as a new local component built on top)
-- **fork via `laioutr/ui-source`** when the upstream internals need to change — copy the file into your module and modify locally, or open an upstream issue/PR
+- **fork from `laioutr-ui/ui-kit` (public) or `laioutr-ui/ui` (licensed users)** when the upstream internals need to change — copy the file into your module and modify locally, or open an upstream issue/PR
 
-The plan only needs to describe **what** has to change and **why** — pick the resolution mechanism at implementation time (see [`three-layer-architecture.md`](../../laioutr-platform/references/three-layer-architecture.md) for the ladder). If the design also matches a component you've already authored in your own module (`src/runtime/components/`), mark it the same way.
+The plan only needs to describe **what** has to change and **why** — pick the resolution mechanism at implementation time (see [`three-layer-architecture.md`](../../laioutr-platform/references/three-layer-architecture.md) for the ladder). If the design also matches a component you've already authored in your own module (`src/runtime/app/components/`), mark it the same way.
 
 ### Search Process
 
 ```bash
 # 1. Check @laioutr-core/ui-kit atomic components
-ls node_modules/@laioutr-core/ui-kit/src/runtime/app/components/
+ls node_modules/@laioutr-core/ui-kit/dist/runtime/app/components/
 
 # 2. Check @laioutr-core/ui commerce organisms
-ls node_modules/@laioutr-core/ui/src/runtime/components/
-ls node_modules/@laioutr-core/ui/src/runtime/components/organism/
+ls node_modules/@laioutr-core/ui/dist/runtime/components/
 
 # 3. Search by keyword from the Figma design
 grep -r "ComponentNameFromFigma" \
-  node_modules/@laioutr-core/ui-kit/src/ \
-  node_modules/@laioutr-core/ui/src/
+  node_modules/@laioutr-core/ui-kit/dist/ \
+  node_modules/@laioutr-core/ui/dist/
 ```
 
 (Path layout assumes npm/yarn; pnpm users adjust to `node_modules/.pnpm/...`.)
@@ -50,7 +49,7 @@ grep -r "ComponentNameFromFigma" \
 | Accordion | `Accordion` + `AccordionItem` | `#ui-kit/components/Accordion/` |
 | Star rating display | `StarsRating` | `#ui-kit/components/StarsRating/StarsRating.vue` |
 | Color swatch | `ColorSwatch` | `#ui-kit/components/ColorSwatch/ColorSwatch.vue` |
-| Product tile | `ProductTileBasic` | `#ui/components/organism/ProductTileBasic/` |
+| Product tile | `ProductTileBasic` | `#ui/components/ProductTileBasic/` |
 | CTA Banner base | `CtaBannerBase` | `#ui-kit/components/CtaBanner/CtaBannerBase.vue` |
 | Product flags (sale/new/promo) | `ProductTileFlag` | `#ui-kit/components/ProductTileFlag/` |
 | Progress bar | `ProgressBar` | `#ui-kit/components/ProgressBar/ProgressBar.vue` |
@@ -69,10 +68,10 @@ For each existing component that needs modification, describe **what** needs to 
 
 ### Cross-File Verification
 
-When analyzing an existing component you're considering for REUSE — typically a presentational primitive plus its Section/Block wrapper (e.g., a `defineSection` in your own `src/runtime/app/section/` that wraps an upstream organism, or two local components composed together) — trace props through the chain and surface issues. Where the issues land depends on who owns the file:
+When analyzing an existing component you're considering for REUSE — typically a presentational primitive plus its Section/Block wrapper (e.g., a `defineSection` in your own `src/runtime/app/sections/` that wraps an upstream organism, or two local components composed together) — trace props through the chain and surface issues. Where the issues land depends on who owns the file:
 
 - **In components your module owns:** these are actionable — list as concrete fixes in the plan's Issues Found section.
-- **In upstream `@laioutr-core/*` components:** these are advisory — note them so the dev can decide whether to file an issue against `laioutr/ui-source` or accept the limitation. They're not blocking work in this plan.
+- **In upstream `@laioutr-core/*` components:** these are advisory — note them so the dev can decide whether to file an issue against `laioutr-ui/ui-kit` or `laioutr-ui/ui` or accept the limitation. They're not blocking work in this plan.
 
 The seven checks:
 
@@ -86,10 +85,10 @@ The seven checks:
 
 ```bash
 # List all registered themes (from upstream)
-ls node_modules/@laioutr-core/ui-kit/src/runtime/app/theme/
+ls node_modules/@laioutr-core/ui-kit/dist/runtime/app/theme/
 
 # Compare against hardcoded keys in the component
-grep -n "laioutr\|classic\|tech\|sunny\|strawberry" path/to/ComponentName.vue
+grep -n "laioutr\|classic\|tech\|sunny" path/to/ComponentName.vue
 ```
 
 Missing entries in hardcoded maps are silent bugs -- they fall back to defaults without error.
@@ -98,7 +97,7 @@ Missing entries in hardcoded maps are silent bugs -- they fall back to defaults 
 
 **This skill only plans presentational components.** They receive data via props and emit events, with no direct connection to external systems (APIs, Orchestr handlers, Pinia stores, payment SDKs). Data binding and Studio wiring happen in `defineSection` / `defineBlock` wrappers, which are out of scope for this skill — that's the `writing-section-block-definitions` skill's territory.
 
-New components live in your Nuxt module under `src/runtime/components/<Name>/`. There's no "which package" decision to make for new components — the upstream `@laioutr-core/ui-kit` / `@laioutr-core/ui` split only matters when **searching for matches**: ui-kit holds atomic primitives, ui holds commerce organisms.
+New components live in your Nuxt module under `src/runtime/app/components/<Name>/`. There's no "which package" decision to make for new components — the upstream `@laioutr-core/ui-kit` / `@laioutr-core/ui` split only matters when **searching for matches**: ui-kit holds atomic primitives, ui holds commerce organisms.
 
 ```dot
 digraph scope {
@@ -120,7 +119,7 @@ When recording matches, note where the existing component lives so the implement
 | Where the existing component lives | Examples | Typical import path |
 |---|---|---|
 | Upstream `@laioutr-core/ui-kit` (atomic) | Button, Card, Icon, Input, Dialog | `#ui-kit/components/<Name>/<Name>.vue` |
-| Upstream `@laioutr-core/ui` (commerce) | ProductTile, Header, Footer, CartSheet | `#ui/components/<Name>/` or `#ui/components/organism/<Name>/` |
+| Upstream `@laioutr-core/ui` (commerce) | ProductTile, Header, Footer, CartSheet | `#ui/components/<Name>/` |
 | Already in your own module | (whatever you've authored) | `~/components/<Name>/` or your module's alias |
 
 ## Decomposing Complex Designs
@@ -132,7 +131,7 @@ For multi-component designs (checkout flows, full pages):
 3. **Map to component hierarchy** -- every component is either composed into another component or will eventually be wrapped by a Section/Block:
    - Atomic elements (buttons, inputs, icons) → usually already in upstream `@laioutr-core/ui-kit`
    - Commerce organisms (product tiles, cart sheets) → usually already in upstream `@laioutr-core/ui`
-   - Anything new → your module's `src/runtime/components/<Name>/`
+   - Anything new → your module's `src/runtime/app/components/<Name>/`
 4. **Start from leaves** -- Plan implementation of innermost components first, then compose outward
 5. **One component per Figma logical group** -- Don't create a component for every Figma frame; group by semantic meaning
 
