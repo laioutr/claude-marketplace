@@ -12,6 +12,7 @@ Type these as slash commands inside a Claude Code session:
 ```text
 /plugin marketplace add laioutr/claude-marketplace
 /plugin install laioutr-developer@laioutr
+/plugin install laioutr-design-manager@laioutr
 ```
 
 ## Plugins in this marketplace
@@ -19,6 +20,7 @@ Type these as slash commands inside a Claude Code session:
 | Plugin | Audience | What it ships |
 | --- | --- | --- |
 | [`laioutr-developer`](plugins/laioutr-developer/) | External frontend / full-stack developers building Vue / Nuxt apps and Orchestr integrations on Laioutr | 11 skills (platform overview, sections/blocks, entity and action tokens, Storybook, the Figma pipeline) with 67 read-on-demand reference files, plus the MCP server for `docs.laioutr.com` |
+| [`laioutr-design-manager`](plugins/laioutr-design-manager/) | Designers and UX / content teams working on Laioutr projects | 7 skills, 2 agents (`ui-designer` builds components and the design system in Figma; `ux-designer` composes sections and blocks into pages in Studio), page-type recipes, the Storybook section/block catalog, design-system templates, plus MCP configs for Figma, `docs.laioutr.com` and the Laioutr Cockpit |
 
 Each plugin has its own `README.md` and `MAPPING.md` documenting source
 material, rewrites, and exclusions.

@@ -1,0 +1,33 @@
+{
+  "name": "laioutr-design-manager",
+  "version": "0.4.0",
+  "description": "Laioutr Design Manager — two senior design agents for Laioutr projects: ui-designer (builds components and the design system directly in Figma, synced with the Laioutr UI kit and Storybook, variables-only library with theme × color scheme × light/dark, end-to-end to buildable Vue sections/blocks) and ux-designer (composes existing sections/blocks into pages and marketing-driven landing pages and fills them with data in Laioutr Studio).",
+  "author": {
+    "name": "Laioutr GmbH"
+  },
+  "homepage": "https://github.com/laioutr/claude-marketplace",
+  "repository": "https://github.com/laioutr/claude-marketplace",
+  "license": "MIT",
+  "keywords": [
+    "laioutr",
+    "design",
+    "figma",
+    "ui-design",
+    "design-system",
+    "ui-kit",
+    "storybook",
+    "atomic-design",
+    "component-library",
+    "layout",
+    "accessibility",
+    "wcag",
+    "design-tokens",
+    "color-scheme",
+    "component-design",
+    "ux-design",
+    "page-composition",
+    "landing-pages",
+    "sections-blocks",
+    "page-types"
+  ]
+}
