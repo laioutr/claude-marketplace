@@ -15,7 +15,28 @@
       "description": "Workflows, rules, and the docs MCP for developers building on the Laioutr e-commerce platform.",
       "homepage": "https://github.com/laioutr/claude-marketplace",
       "license": "MIT",
-      "keywords": ["laioutr", "developer", "typescript", "vue", "nuxt"]
+      "keywords": [
+        "laioutr",
+        "developer",
+        "typescript",
+        "vue",
+        "nuxt"
+      ]
+    },
+    {
+      "name": "laioutr-design-manager",
+      "source": "./plugins/laioutr-design-manager",
+      "description": "Two senior design agents for Laioutr projects: a UI designer that builds components and the design system in Figma, and a UX designer that composes sections and blocks into pages in Laioutr Studio.",
+      "homepage": "https://github.com/laioutr/claude-marketplace",
+      "license": "MIT",
+      "keywords": [
+        "laioutr",
+        "design",
+        "figma",
+        "design-system",
+        "ux",
+        "landing-pages"
+      ]
     }
   ]
 }

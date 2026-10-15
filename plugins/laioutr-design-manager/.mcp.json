@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "figma": {
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp"
+    },
+    "figma-desktop": {
+      "type": "http",
+      "url": "http://127.0.0.1:3845/mcp"
+    },
+    "laioutr-docs": {
+      "type": "http",
+      "url": "https://docs.laioutr.com/mcp"
+    },
+    "laioutr": {
+      "type": "http",
+      "url": "https://mcp.laioutr.com/mcp"
+    }
+  }
+}
